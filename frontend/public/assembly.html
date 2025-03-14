@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Assembly Station | Restaurant Order Management</title>
+  <link rel="stylesheet" href="styles.css">
+  <!-- Supabase JS library -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    // Make Supabase globally available as supabaseJs
+    const supabaseJs = supabase;
+  </script>
+  <style>
+    /* Assembly station specific styles */
+    .orders-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 16px;
+      padding: 16px;
+    }
+    
+    .order-tile {
+      background-color: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      min-height: 200px;
+      transition: all 0.3s ease;
+    }
+    
+    .order-tile.pending {
+      border-left: 5px solid #3498db;
+    }
+    
+    .order-tile.in-progress {
+      border-left: 5px solid #f39c12;
+      background-color: #fffcf5;
+    }
+    
+    .order-tile.done {
+      border-left: 5px solid #2ecc71;
+      background-color: #f5fff7;
+    }
+    
+    .order-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    
+    .order-info {
+      font-weight: bold;
+    }
+    
+    .order-time {
+      color: #7f8c8d;
+      font-size: 0.9em;
+    }
+    
+    .order-items {
+      flex-grow: 1;
+      margin: 10px 0;
+    }
+    
+    .order-item {
+      display: flex;
+      justify-content: space-between;
+      margin: 5px 0;
+      padding: 5px 0;
+      border-bottom: 1px dashed #eee;
+    }
+    
+    .order-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    
+    .btn {
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background-color 0.2s;
+    }
+    
+    .btn-assign {
+      background-color: #3498db;
+      color: white;
+    }
+    
+    .btn-assign:hover {
+      background-color: #2980b9;
+    }
+    
+    .btn-done {
+      background-color: #2ecc71;
+      color: white;
+    }
+    
+    .btn-done:hover {
+      background-color: #27ae60;
+    }
+    
+    .status-badge {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 0.8em;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+    
+    .status-pending {
+      background-color: #e3f2fd;
+      color: #1565c0;
+    }
+    
+    .status-in-progress {
+      background-color: #fff3e0;
+      color: #e65100;
+    }
+    
+    .status-done {
+      background-color: #e8f5e9;
+      color: #2e7d32;
+    }
+    
+    .assigned-to {
+      font-size: 0.9em;
+      font-style: italic;
+      margin-top: 5px;
+      color: #7f8c8d;
+    }
+    
+    /* History section styles */
+    .toggle-container {
+      display: flex;
+      justify-content: flex-end;
+      padding: 8px 16px;
+      align-items: center;
+    }
+    
+    .toggle-history {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      user-select: none;
+    }
+    
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 40px;
+      height: 20px;
+      margin-right: 8px;
+    }
+    
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      border-radius: 34px;
+      transition: .3s;
+    }
+    
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 2px;
+      bottom: 2px;
+      background-color: white;
+      border-radius: 50%;
+      transition: .3s;
+    }
+    
+    input:checked + .toggle-slider {
+      background-color: #2ecc71;
+    }
+    
+    input:checked + .toggle-slider:before {
+      transform: translateX(20px);
+    }
+    
+    .history-container {
+      display: none;
+      margin: 0 16px 16px;
+      border-radius: 8px;
+      background-color: #f9f9f9;
+      border: 1px solid #ddd;
+      max-height: 250px;
+      overflow-y: auto;
+    }
+    
+    .history-container.visible {
+      display: block;
+    }
+    
+    .history-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    
+    .history-item {
+      padding: 8px 12px;
+      border-bottom: 1px solid #eee;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .history-item:last-child {
+      border-bottom: none;
+    }
+    
+    .history-item:hover {
+      background-color: #f0f0f0;
+    }
+    
+    .history-details {
+      display: none;
+      background-color: #fff;
+      padding: 8px;
+      margin-top: 4px;
+      border-radius: 4px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .history-item.expanded .history-details {
+      display: block;
+    }
+    
+    .history-badge {
+      font-size: 0.8em;
+      padding: 2px 6px;
+      border-radius: 12px;
+      background-color: #e8f5e9;
+      color: #2e7d32;
+    }
+    
+    /* Station headers in active orders */
+    .station-header {
+      display: flex;
+      align-items: center;
+      margin-top: 10px;
+      margin-bottom: 5px;
+      font-weight: bold;
+    }
+    
+    .station-header::before {
+      content: '';
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      margin-right: 5px;
+      border-radius: 50%;
+    }
+    
+    .station-header:first-child {
+      margin-top: 0;
+    }
+    
+    /* Station color indicators */
+    .station-header[data-station="assembly"]::before {
+      background-color: #2196F3; /* Blue */
+    }
+    
+    .station-header[data-station="grill"]::before {
+      background-color: #F44336; /* Red */
+    }
+    
+    .station-header[data-station="fries"]::before {
+      background-color: #FF9800; /* Orange */
+    }
+    
+    .station-header[data-station="kitchen"]::before {
+      background-color: #4CAF50; /* Green */
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">Restaurant Order Management</div>
+      <div class="station-header">
+        <div class="station-name">Assembly Station</div>
+        <div class="clock" id="clock"></div>
+      </div>
+    </header>
+    
+    <main>
+      <div class="toggle-container">
+        <label class="toggle-history">
+          <span class="toggle-switch">
+            <input type="checkbox" id="historyToggle">
+            <span class="toggle-slider"></span>
+          </span>
+          Show Completed Orders
+        </label>
+      </div>
+      
+      <div id="history-container" class="history-container">
+        <ul id="history-list" class="history-list">
+          <li class="history-item">
+            <span>Loading history...</span>
+          </li>
+        </ul>
+      </div>
+      
+      <div id="orders-grid" class="orders-grid">
+        <!-- Order tiles will be inserted here -->
+        <div class="order-tile pending">
+          <div class="status-badge status-pending">Loading...</div>
+          <div class="order-header">
+            <div class="order-info">Loading orders...</div>
+            <div class="order-time">-</div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="supabase-client.js"></script>
+  <script>
+    // Select DOM elements
+    const clockElement = document.getElementById('clock');
+    const ordersGridElement = document.getElementById('orders-grid');
+    const historyToggle = document.getElementById('historyToggle');
+    const historyContainer = document.getElementById('history-container');
+    const historyList = document.getElementById('history-list');
+    
+    // Employee name - in a real application, this would come from login/authentication
+    const EMPLOYEE_NAME = "Employee1";
+    
+    // State to track loaded history
+    let historyLoaded = false;
+    
+    // Initialize clock
+    function updateClock() {
+      const now = new Date();
+      clockElement.textContent = now.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+    }
+    
+    // Update clock every second
+    updateClock();
+    setInterval(updateClock, 1000);
+    
+    // Load initial data
+    async function loadInitialData() {
+      try {
+        console.log('Fetching assembly data...');
+        
+        // Add a timestamp to prevent caching
+        const timestamp = new Date().getTime();
+        const url = `http://localhost:3000/stations/assembly?t=${timestamp}`;
+        console.log('Fetching from URL:', url);
+        
+        const response = await fetch(url, {
+          // Add no-cache headers
+          headers: {
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          }
+        });
+        
+        if (!response.ok) {
+          console.error('Server returned error:', response.status, response.statusText);
+          throw new Error('Failed to fetch assembly data');
+        }
+        
+        const orders = await response.json();
+        console.log(`Received ${orders.length} orders:`, orders);
+        
+        // Clear loading placeholder
+        ordersGridElement.innerHTML = '';
+        
+        // If no orders, show a message
+        if (orders.length === 0) {
+          ordersGridElement.innerHTML = `
+            <div class="info-message" style="text-align: center; padding: 20px; color: #666;">
+              No pending orders for assembly at this time.
+            </div>
+          `;
+          return;
+        }
+        
+        // Render each order
+        console.log('Rendering orders to UI...');
+        orders.forEach((order, index) => {
+          console.log(`Rendering order ${index + 1}/${orders.length}:`, order.id);
+          renderOrderTile(order);
+        });
+        console.log('Finished rendering orders');
+        
+      } catch (error) {
+        console.error('Error loading assembly data:', error);
+        ordersGridElement.innerHTML = `
+          <div class="error-message">
+            Failed to load orders. Please try refreshing the page.
+          </div>
+        `;
+      }
+    }
+    
+    // Render a single order tile
+    function renderOrderTile(order) {
+      const orderTime = new Date(order.scheduled_at || order.order_time);
+      const statusClass = order.status.replace('_', '-');
+      const orderCustomerLabel = `#${order.order_number} - ${order.customer || 'No customer'}`;
+      
+      let orderTile = document.createElement('div');
+      orderTile.className = `order-tile ${statusClass}`;
+      orderTile.id = `order-${order.id}`;
+      
+      let orderHTML = `
+        <div class="status-badge status-${statusClass}">${order.status.replace('_', ' ')}</div>
+        <div class="order-header">
+          <div class="order-info">${orderCustomerLabel}</div>
+          <div class="order-time">${formatTime(orderTime)}</div>
+        </div>`;
+      
+      // Add preparation status indicator if available
+      if (order.order_prep_status) {
+        const prepStatusClass = order.order_prep_status.toLowerCase().replace(/\s+/g, '-');
+        orderHTML += `
+          <div class="prep-status-indicator ${prepStatusClass}">
+            ${order.order_prep_status}
+          </div>`;
+      }
+      
+      // Add items section
+      orderHTML += `<div class="order-items">`;
+      
+      // Check if we have grouped items
+      if (order.groupedItems) {
+        // Determine which stations to show and their order (assembly first)
+        const stations = Object.keys(order.groupedItems).sort((a, b) => {
+          if (a === 'assembly') return -1;
+          if (b === 'assembly') return 1;
+          return a.localeCompare(b);
+        });
+        
+        // Display items by station
+        stations.forEach(station => {
+          const stationItems = order.groupedItems[station];
+          if (!stationItems || stationItems.length === 0) return;
+          
+          orderHTML += `
+            <div class="station-header" data-station="${station}">
+              ${station.charAt(0).toUpperCase() + station.slice(1)}
+            </div>
+            <div class="station-items">`;
+          
+          stationItems.forEach(item => {
+            const prepStatusClass = item.prep_status ? item.prep_status.toLowerCase().replace(/\s+/g, '-') : '';
+            
+            orderHTML += `
+              <div class="order-item ${prepStatusClass}">
+                <div class="item-name">${item.item_name}</div>
+                <div class="item-quantity">x${item.quantity}</div>`;
+            
+            // Add prep status if available
+            if (item.prep_status) {
+              orderHTML += `<div class="item-prep-status">${item.prep_status}</div>`;
+            }
+            
+            // Add prep time if > 0
+            if (item.preparation_time_minutes > 0) {
+              orderHTML += `<div class="item-prep-time">${item.preparation_time_minutes} min prep</div>`;
+            }
+            
+            orderHTML += `</div>`;
+          });
+          
+          orderHTML += `</div>`;
+        });
+      } else {
+        // Fallback for flat list of items
+        (order.items || []).forEach(item => {
+          const prepStatusClass = item.prep_status ? item.prep_status.toLowerCase().replace(/\s+/g, '-') : '';
+          
+          orderHTML += `
+            <div class="order-item ${prepStatusClass}">
+              <div class="item-name">${item.item_name}</div>
+              <div class="item-quantity">x${item.quantity}</div>`;
+          
+          // Add prep status if available
+          if (item.prep_status) {
+            orderHTML += `<div class="item-prep-status">${item.prep_status}</div>`;
+          }
+          
+          // Add prep time if > 0
+          if (item.preparation_time_minutes > 0) {
+            orderHTML += `<div class="item-prep-time">${item.preparation_time_minutes} min prep</div>`;
+          }
+          
+          orderHTML += `</div>`;
+        });
+      }
+      
+      orderHTML += `</div>`;
+      
+      // Add action buttons
+      orderHTML += `
+        <div class="order-actions">
+          ${order.status === 'pending' ? 
+            `<button class="assign-button" onclick="assignOrder(${order.id})">Assign to me</button>` : ''}
+          ${order.status === 'in_progress' ? 
+            `<button class="done-button" onclick="markAsDone(${order.id})">Mark as Done</button>` : ''}
+        </div>`;
+      
+      orderTile.innerHTML = orderHTML;
+      ordersGridElement.appendChild(orderTile);
+      return orderTile;
+    }
+    
+    // Update order status
+    async function updateOrderStatus(orderId, status, assigned_to) {
+      try {
+        console.log(`Starting update for order ${orderId} - Status: ${status}, Assigned to: ${assigned_to}`);
+        
+        const response = await fetch(`http://localhost:3000/orders/${orderId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          },
+          body: JSON.stringify({ status, assigned_to })
+        });
+        
+        console.log(`Response status: ${response.status}`);
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          console.error('Server returned error:', errorData);
+          throw new Error(`Failed to update order status: ${response.status} ${response.statusText}`);
+        }
+        
+        // Force a complete refresh of the page
+        setTimeout(() => {
+          window.location.reload();
+        }, 500);
+      } catch (error) {
+        console.error('Error updating order status:', error);
+        alert('Failed to update order status. Please try again.');
+      }
+    }
+    
+    // Subscribe to real-time updates for orders
+    function subscribeToOrders() {
+      return supabase
+        .channel('public:orders')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, handleOrderChange)
+        .subscribe();
+    }
+    
+    // Handle real-time order changes
+    function handleOrderChange(payload) {
+      const order = payload.new;
+      
+      // For a new order or update, fetch the complete order with items
+      if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+        fetchOrderWithItems(order.id);
+      }
+      
+      // For deletion, remove from the UI
+      if (payload.eventType === 'DELETE') {
+        const tileElement = document.getElementById(`order-${order.id}`);
+        if (tileElement) {
+          tileElement.remove();
+        }
+      }
+    }
+    
+    // Fetch a single order with its items
+    async function fetchOrderWithItems(orderId) {
+      try {
+        const response = await fetch(`http://localhost:3000/orders/${orderId}`);
+        if (!response.ok) throw new Error('Failed to fetch order details');
+        
+        const order = await response.json();
+        
+        // If the order is done, remove it from the display
+        if (order.status === 'done') {
+          const tileElement = document.getElementById(`order-${order.id}`);
+          if (tileElement) {
+            tileElement.remove();
+          }
+          return;
+        }
+        
+        // Update or add to the UI
+        const existingTile = document.getElementById(`order-${order.id}`);
+        if (existingTile) {
+          existingTile.remove();
+        }
+        
+        renderOrderTile(order);
+      } catch (error) {
+        console.error('Error fetching order details:', error);
+      }
+    }
+    
+    // Load completed orders for history view
+    function loadCompletedOrders() {
+      const timeframeSelect = document.getElementById('historyTimeframe');
+      const timeframe = timeframeSelect ? timeframeSelect.value : 'day';
+      
+      fetchWithAuth(`${API_URL}/stations/assembly/history?timeframe=${timeframe}`)
+        .then(response => response.json())
+        .then(completedOrders => {
+          const historyContainer = document.getElementById('historyContainer');
+          historyContainer.innerHTML = '';
+          
+          if (completedOrders.length === 0) {
+            historyContainer.innerHTML = '<p>No completed orders found for this period.</p>';
+            return;
+          }
+          
+          completedOrders.forEach(order => {
+            const orderEl = document.createElement('div');
+            orderEl.className = 'history-order';
+            
+            let orderHTML = `
+              <div class="history-order-header" onclick="toggleOrderDetails(this)">
+                <span class="order-number">#${order.order_number}</span>
+                <span class="order-customer">${order.customer || 'No customer'}</span>
+                <span class="order-time">${new Date(order.order_time).toLocaleString()}</span>
+                <span class="toggle-icon">▼</span>
+              </div>
+              <div class="history-order-details">`;
+            
+            // Check if we have grouped items
+            if (order.groupedItems) {
+              // Determine which stations to show and their order (assembly first)
+              const stations = Object.keys(order.groupedItems).sort((a, b) => {
+                if (a === 'assembly') return -1;
+                if (b === 'assembly') return 1;
+                return a.localeCompare(b);
+              });
+              
+              // Display items by station
+              stations.forEach(station => {
+                const stationItems = order.groupedItems[station];
+                
+                orderHTML += `
+                  <div class="station-header" data-station="${station}">
+                    ${station.charAt(0).toUpperCase() + station.slice(1)}
+                  </div>
+                  <div class="station-items">`;
+                
+                stationItems.forEach(item => {
+                  orderHTML += `
+                    <div class="order-item">
+                      <div class="item-name">${item.item_name}</div>
+                      <div class="item-quantity">x${item.quantity}</div>`;
+                  
+                  // Add prep time if > 0
+                  if (item.preparation_time_minutes > 0) {
+                    orderHTML += `<div class="item-prep-time">${item.preparation_time_minutes} min prep</div>`;
+                  }
+                  
+                  orderHTML += `</div>`;
+                });
+                
+                orderHTML += `</div>`;
+              });
+            } else {
+              // Fallback for flat list of items
+              orderHTML += '<ul>';
+              order.items.forEach(item => {
+                orderHTML += `
+                  <li>
+                    ${item.item_name} x${item.quantity}
+                    ${item.preparation_time_minutes > 0 ? `<span class="item-prep-time">(${item.preparation_time_minutes} min prep)</span>` : ''}
+                  </li>`;
+              });
+              orderHTML += '</ul>';
+            }
+            
+            orderHTML += `</div>`;
+            orderEl.innerHTML = orderHTML;
+            historyContainer.appendChild(orderEl);
+          });
+        })
+        .catch(error => {
+          console.error('Error loading completed orders:', error);
+          document.getElementById('historyContainer').innerHTML = '<p>Error loading completed orders.</p>';
+        });
+    }
+    
+    // Toggle history visibility
+    historyToggle.addEventListener('change', function() {
+      if (this.checked) {
+        historyContainer.classList.add('visible');
+        loadCompletedOrders();
+      } else {
+        historyContainer.classList.remove('visible');
+      }
+    });
+    
+    // Initialize the page
+    document.addEventListener('DOMContentLoaded', () => {
+      loadInitialData();
+      subscribeToOrders();
+    });
+    
+    // Assign order to current employee 
+    async function assignOrder(orderId) {
+      console.log(`Assigning order ${orderId} to ${EMPLOYEE_NAME}`);
+      try {
+        const response = await fetch(`http://localhost:3000/stations/assembly/order/${orderId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          },
+          body: JSON.stringify({ 
+            status: 'in_progress', 
+            assigned_to: EMPLOYEE_NAME 
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Failed to assign order: ${response.status}`);
+        }
+        
+        console.log('Order assigned successfully');
+        
+        // Reload the page to refresh the data
+        setTimeout(() => {
+          window.location.reload();
+        }, 500);
+      } catch (error) {
+        console.error('Error assigning order:', error);
+        alert('Failed to assign order. Please try again.');
+      }
+    }
+    
+    // Mark order as done
+    async function markAsDone(orderId) {
+      console.log(`Marking order ${orderId} as done`);
+      try {
+        const response = await fetch(`http://localhost:3000/stations/assembly/order/${orderId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Expires': '0'
+          },
+          body: JSON.stringify({ 
+            status: 'done', 
+            assigned_to: null 
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Failed to mark order as done: ${response.status}`);
+        }
+        
+        console.log('Order marked as done successfully');
+        
+        // Reload the page to refresh the data
+        setTimeout(() => {
+          window.location.reload();
+        }, 500);
+      } catch (error) {
+        console.error('Error marking order as done:', error);
+        alert('Failed to mark order as done. Please try again.');
+      }
+    }
+  </script>
+</body>
+</html> 

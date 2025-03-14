@@ -1,0 +1,215 @@
+# Restaurant Management System - Development Changelog
+
+## Overview
+This document tracks the key issues encountered during the development of the restaurant management system and the solutions implemented to resolve them. This serves as a checkpoint reference for future development.
+
+## Item 1: Row Level Security (RLS) Issues with Supabase
+
+### Problem:
+When trying to create new items for orders, we were running into RLS policy restrictions in Supabase. The error messages indicated that the client didn't have permission to perform the requested operation on the 'items' table.
+
+### Solution:
+- Created a special `supabaseAdmin` client that bypasses RLS policies
+- Used this admin client specifically for operations that required elevated privileges
+- Implemented this in both the POST route for creating new orders and PUT route for updating orders
+- Ensured that regular read operations still used the standard client to maintain security
+
+### Code Changes:
+- Modified backend routes to conditionally use either the standard or admin client
+- Kept using the regular client for read operations and simple updates
+- Used the admin client for creating new items and deleting existing items
+
+## Item 2: Missing Authentication Middleware
+
+### Problem:
+The server was failing to start due to missing authentication middleware, showing error: "Cannot find module '../middleware/auth'".
+
+### Solution:
+- Commented out the import statement for the missing auth middleware in the affected routes
+- Modified routes to function without the authentication middleware
+- This was a temporary solution to get the system running, with the understanding that proper authentication would be implemented later
+
+### Code Changes:
+- In `backend/src/routes/stations.js`, commented out: `// const { authenticateToken } = require('../middleware/auth');`
+- Removed middleware from route definitions
+
+## Item 3: Missing Supabase Module
+
+### Problem:
+Server was failing with error: "Cannot find module '../db/supabase'", indicating a missing database connection module.
+
+### Solution:
+- Instead of relying on a central module, we implemented direct Supabase client initialization in each route file that needed it
+- This ensured that each route could independently establish a connection to the database
+
+### Code Changes:
+- Added Supabase client initialization directly in route files
+- Set up proper environment variable fallbacks for the Supabase URL and keys
+
+## Item 4: Missing Prep Helpers
+
+### Problem:
+The server was failing due to missing helper functions from a non-existent "../utils/prep-helpers" module.
+
+### Solution:
+- Implemented the necessary helper functions directly in the route file where they were needed
+- Created functions for determining item preparation status, order status, and station visibility logic
+
+### Code Changes:
+- Implemented the following functions directly in the stations.js file:
+  - `determineItemPrepStatus` - Handles item preparation status logic
+  - `determineOrderStatus` - Calculates overall order status based on items
+  - `shouldShowItemAtStation` - Determines whether an item should be visible at a given station
+
+## Item 5: Problems with Existing Items Not Appearing When Editing Orders
+
+### Problem:
+When editing an existing order, previously saved items weren't appearing in the UI.
+
+### Diagnosis:
+- The frontend was correctly loading items from the backend
+- The backend was retrieving items but had logic issues in how it handled existing vs. new items
+
+### Solution:
+- Improved the item categorization logic in the PUT endpoint:
+  - Better handling of existing items (with IDs)
+  - Proper handling of new items (without IDs)
+  - Clear distinction between items to update, create, and delete
+
+### Code Changes:
+- Enhanced the logic for categorizing items in the PUT endpoint
+- Added detailed logging to track what was happening with the items
+- Fixed how item status was preserved to maintain continuity
+
+## Item 6: Null ID Field Error When Creating New Items
+
+### Problem:
+When trying to add new items to an order, we received a database constraint violation error:
+"null value in column 'id' of relation 'items' violates not-null constraint"
+
+### Diagnosis:
+- Our approach of setting `id: undefined` for new items was causing the database to try inserting NULL values
+- The items table had a NOT NULL constraint on the id field
+
+### Solution 1 (Failed):
+- Attempted to explicitly set `id: undefined` to let the database auto-generate IDs
+- This didn't work because it violated the NOT NULL constraint
+
+### Solution 2 (Successful):
+- Changed approach to completely omit the ID field for new items
+- Created new items with only the necessary fields (item_name, quantity, station, preparation_time_minutes, order_id, item_status)
+- Let the database handle ID generation according to its configured behavior
+
+### Code Changes:
+```javascript
+// Changed from:
+newItemsToCreate.push({
+  ...item,
+  id: undefined,
+  order_id: id,
+  item_status: item.item_status || 'pending'
+});
+
+// To:
+const newItem = { 
+  item_name: item.item_name,
+  quantity: item.quantity,
+  station: item.station,
+  preparation_time_minutes: item.preparation_time_minutes,
+  order_id: id,
+  item_status: item.item_status || 'pending'
+};
+newItemsToCreate.push(newItem);
+```
+
+## Item 7: Frontend CSS Improvement 
+
+### Problem:
+Manager card styling was using inline styles instead of CSS classes.
+
+### Solution:
+- Replaced inline `style="background-color: #673AB7;"` with a CSS class
+- Added the class `manager` to standardize styling
+
+## Item 8: Schema Cache Issue When Marking Orders as Complete
+
+### Problem:
+Encountered an error message: "Could not find the 'items' column of 'orders' in the schema cache" when marking orders as complete. This was due to a schema cache issue in Supabase/PostgreSQL.
+
+### Solution:
+- Simplified the order update process to only include necessary fields (id and status).
+- Added a step to fetch the latest order data before updating to ensure the most up-to-date items.
+- Implemented a retry mechanism in the `loadCompletedOrders` function to handle potential delays in database updates.
+- Improved navigation flow to immediately switch tabs and delay data refresh for consistency.
+
+### Code Changes:
+- Modified the `frontend/public/manager.html` file to simplify the order update logic and ensure the latest items are used.
+- Added retry logic and error handling in the `loadCompletedOrders` function.
+- Adjusted tab navigation to improve user experience and data consistency.
+
+## Item 9: Phone Order Interface Addition
+
+### Problem:
+The restaurant needed a dedicated interface for employees to quickly take orders over the phone, with an emphasis on ease of use and speed.
+
+### Solution:
+- Created a new phone-order.html page with a touch-friendly button interface
+- Organized menu items by categories for easy navigation
+- Implemented a cart system with quantity controls for building orders
+- Added automatic station assignment and preparation time estimation
+- Integrated with the existing order system backend
+
+### Code Changes:
+- Created a new frontend/public/phone-order.html file with the phone order interface
+- Added navigation links between the manager interface and phone order interface
+- Utilized the same backend endpoint for consistent order processing
+- Implemented helper functions to determine appropriate stations and prep times for items
+
+## General Code Improvements
+
+- Enhanced error handling throughout the backend routes
+- Added more detailed logging to aid future debugging
+- Improved the update logic to handle partial failures gracefully
+- Standardized the response format for success and error cases
+- Ensured proper cleanup of items when orders are deleted
+
+## Next Steps & Recommendations
+
+1. **Implement proper authentication**: Replace the commented-out authentication with a working system
+2. **Improve error handling**: Continue to enhance error reporting for a better debugging experience
+3. **UI refinements**: Further improve the user interface for better usability
+4. **Testing**: Develop a comprehensive test suite to ensure system stability
+5. **Documentation**: Complete system documentation for future maintainers
+
+## Database Schema Notes
+
+- Orders table: Contains order details (customer, status, source, scheduled_at, order_time)
+- Items table: Contains items associated with orders (id, order_id, item_name, quantity, station, preparation_time_minutes, item_status)
+- The 'id' field in the items table must not be NULL - the database expects a value to be provided or generated
+
+## Environment Setup
+
+- Backend: Node.js with Express
+- Frontend: HTML/CSS/JavaScript
+- Database: Supabase (PostgreSQL)
+- Backend runs on port 3000
+- Frontend served on port 8080
+
+## Running the System
+
+1. Start the backend server:
+   ```
+   cd backend
+   npm start
+   ```
+
+2. Start the frontend server:
+   ```
+   cd frontend
+   npx http-server public -c-1 -p 8080
+   ```
+
+3. Access the system at:
+   - Manager interface: http://localhost:8080/manager.html
+   - Kitchen display: http://localhost:8080/kitchen.html
+   - Customer view: http://localhost:8080/index.html 

@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manager Dashboard | Restaurant Order Management</title>
+  <link rel="stylesheet" href="styles.css">
+  <!-- Supabase JS library -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    // Make Supabase globally available as supabaseJs
+    const supabaseJs = supabase;
+  </script>
+  <style>
+    /* Additional styles specific to manager page */
+    .time-filter {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 15px;
+      padding: 10px;
+      background-color: #f8f9fa;
+      border-radius: 5px;
+    }
+    
+    .time-filter-btn {
+      padding: 6px 12px;
+      border: 1px solid #ccc;
+      background-color: white;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9em;
+      transition: all 0.2s;
+    }
+    
+    .time-filter-btn:hover {
+      background-color: #f1f1f1;
+    }
+    
+    .time-filter-btn.active {
+      background-color: #3498db;
+      color: white;
+      border-color: #2980b9;
+    }
+    
+    .time-block {
+      margin-bottom: 20px;
+      border-radius: 5px;
+      overflow: hidden;
+      border: 1px solid #eee;
+    }
+    
+    .time-block-header {
+      background-color: #2c3e50;
+      color: white;
+      padding: 10px 15px;
+      font-weight: bold;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .time-block-header .count {
+      background-color: #e74c3c;
+      color: white;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 0.8em;
+    }
+    
+    .time-block-content {
+      padding: 10px;
+      background-color: white;
+    }
+    
+    .no-orders {
+      text-align: center;
+      padding: 20px;
+      color: #7f8c8d;
+      font-style: italic;
+    }
+    
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0,0,0,0.6);
+      z-index: 100;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .modal.show {
+      display: flex;
+    }
+    
+    .modal-content {
+      background-color: white;
+      border-radius: 5px;
+      max-width: 700px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+    
+    .modal-header {
+      padding: 15px;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .modal-body {
+      padding: 15px;
+    }
+    
+    .modal-footer {
+      padding: 15px;
+      border-top: 1px solid #eee;
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+    
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 1.5em;
+      cursor: pointer;
+      color: #666;
+    }
+    
+    .item-editor {
+      margin-bottom: 15px;
+      padding: 10px;
+      border: 1px solid #eee;
+      border-radius: 4px;
+    }
+    
+    .item-actions {
+      display: flex;
+      gap: 5px;
+      margin-top: 5px;
+    }
+    
+    .add-item {
+      width: 100%;
+      padding: 10px;
+      background-color: #f8f9fa;
+      border: 1px dashed #ccc;
+      border-radius: 4px;
+      cursor: pointer;
+      text-align: center;
+      margin-top: 10px;
+    }
+    
+    .add-item:hover {
+      background-color: #e9ecef;
+    }
+    
+    /* Form element styles */
+    .form-group {
+      margin-bottom: 10px;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+    }
+    
+    input[type="text"],
+    input[type="number"],
+    input[type="datetime-local"],
+    select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 0.9em;
+    }
+    
+    .btn {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9em;
+      transition: background-color 0.2s;
+    }
+    
+    .btn-primary {
+      background-color: #3498db;
+      color: white;
+    }
+    
+    .btn-danger {
+      background-color: #e74c3c;
+      color: white;
+    }
+    
+    .btn-secondary {
+      background-color: #95a5a6;
+      color: white;
+    }
+    
+    .btn:hover {
+      opacity: 0.9;
+    }
+    
+    .inline-form {
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+    }
+    
+    .inline-form .form-group {
+      flex: 1;
+    }
+    
+    /* Notification Styles */
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1050;
+      max-width: 350px;
+      background-color: #fff;
+      border-left: 4px solid #ffc107;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      border-radius: 4px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+    
+    .notification-content {
+      padding: 15px 20px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+    }
+    
+    .notification-content span {
+      flex: 1;
+      margin-right: 10px;
+      color: #555;
+      font-size: 14px;
+    }
+    
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 18px;
+      color: #999;
+      cursor: pointer;
+      padding: 0;
+      margin: 0;
+    }
+    
+    .close-btn:hover {
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">Restaurant Order Management</div>
+      <div class="station-header">
+        <div class="station-name">Manager Dashboard</div>
+        <div class="clock" id="clock"></div>
+      </div>
+    </header>
+    
+    <main>
+      <h1>Order Management</h1>
+      
+      <div class="toolbar">
+        <button id="create-order-btn" class="btn btn-primary">Create New Order</button>
+        <button id="refresh-btn" class="btn btn-secondary">Refresh Data</button>
+      </div>
+      
+      <div class="time-filter" id="time-filter">
+        <button class="time-filter-btn active" data-filter="all">All Today</button>
+        <!-- Hour blocks will be dynamically added here -->
+      </div>
+      
+      <div id="orders-container">
+        <!-- Time blocks and orders will be dynamically added here -->
+        <div class="loading">Loading orders...</div>
+      </div>
+    </main>
+  </div>
+  
+  <!-- Edit Order Modal -->
+  <div id="edit-order-modal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modal-title">Edit Order</h2>
+        <button class="close-btn" id="close-modal">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="order-form">
+          <input type="hidden" id="order-id">
+          
+          <div class="form-group">
+            <label for="customer">Customer Name</label>
+            <input type="text" id="customer" name="customer" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="scheduled-at">Scheduled For</label>
+            <input type="datetime-local" id="scheduled-at" name="scheduled-at" required>
+          </div>
+          
+          <div class="form-group">
+            <label for="status">Status</label>
+            <select id="status" name="status">
+              <option value="pending">Pending</option>
+              <option value="in_progress">In Progress (Customer Arrived)</option>
+              <option value="done">Done</option>
+            </select>
+          </div>
+          
+          <h3>Items</h3>
+          <div id="items-container">
+            <!-- Item editors will be dynamically added here -->
+          </div>
+          
+          <div class="add-item" id="add-item-btn">
+            <i>+ Add Item</i>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="cancel-btn">Cancel</button>
+        <button class="btn btn-primary" id="save-btn">Save Changes</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- New Item Template (hidden) -->
+  <template id="item-template">
+    <div class="item-editor">
+      <div class="inline-form">
+        <div class="form-group">
+          <label for="item-name">Item</label>
+          <input type="text" class="item-name" placeholder="Item name" required>
+        </div>
+        <div class="form-group">
+          <label for="item-quantity">Qty</label>
+          <input type="number" class="item-quantity" min="1" value="1" required>
+        </div>
+        <div class="form-group">
+          <label for="item-station">Station</label>
+          <select class="item-station">
+            <option value="grill">Grill</option>
+            <option value="kitchen">Kitchen</option>
+            <option value="fries">Fries</option>
+            <option value="assembly">Assembly</option>
+          </select>
+        </div>
+      </div>
+      <div class="item-actions">
+        <button type="button" class="btn btn-danger remove-item-btn">Remove</button>
+      </div>
+    </div>
+  </template>
+
+  <!-- Add a notification element for displaying messages -->
+  <div id="notification" class="notification" style="display: none;">
+    <div class="notification-content">
+      <span id="notification-message"></span>
+      <button id="notification-close" class="close-btn">&times;</button>
+    </div>
+  </div>
+
+  <script src="supabase-client.js"></script>
+  <script>
+    // DOM Elements
+    const clockElement = document.getElementById('clock');
+    const timeFilterElement = document.getElementById('time-filter');
+    const ordersContainerElement = document.getElementById('orders-container');
+    const createOrderBtn = document.getElementById('create-order-btn');
+    const refreshBtn = document.getElementById('refresh-btn');
+    const editOrderModal = document.getElementById('edit-order-modal');
+    const closeModalBtn = document.getElementById('close-modal');
+    const modalTitle = document.getElementById('modal-title');
+    const orderForm = document.getElementById('order-form');
+    const orderIdInput = document.getElementById('order-id');
+    const customerInput = document.getElementById('customer');
+    const scheduledAtInput = document.getElementById('scheduled-at');
+    const statusInput = document.getElementById('status');
+    const itemsContainer = document.getElementById('items-container');
+    const addItemBtn = document.getElementById('add-item-btn');
+    const cancelBtn = document.getElementById('cancel-btn');
+    const saveBtn = document.getElementById('save-btn');
+    const itemTemplate = document.getElementById('item-template');
+    
+    // State
+    let allOrders = [];
+    let activeFilter = 'all';
+    
+    // Initialize clock
+    function updateClock() {
+      const now = new Date();
+      clockElement.textContent = now.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+    }
+    
+    // Update clock every second
+    updateClock();
+    setInterval(updateClock, 1000);
+    
+    // Load all orders
+    async function loadOrders() {
+      try {
+        // Show loading indicator
+        ordersContainerElement.innerHTML = '<div class="loading">Loading orders...</div>';
+        
+        // Get current date (start of day)
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        // Fetch orders from backend
+        const response = await fetch('http://localhost:3000/orders/day');
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch orders');
+        }
+        
+        const data = await response.json();
+        allOrders = data;
+        
+        // Generate hour filters
+        generateTimeFilters();
+        
+        // Render orders based on active filter
+        renderFilteredOrders();
+        
+      } catch (error) {
+        console.error('Error loading orders:', error);
+        ordersContainerElement.innerHTML = `
+          <div class="error-message">
+            Failed to load orders: ${error.message}. Please try refreshing the page.
+          </div>
+        `;
+      }
+    }
+    
+    // Generate time filters based on order times
+    function generateTimeFilters() {
+      // Clear existing filters except "All Today"
+      const allFilterBtn = timeFilterElement.querySelector('[data-filter="all"]');
+      timeFilterElement.innerHTML = '';
+      timeFilterElement.appendChild(allFilterBtn);
+      
+      // Get all unique hours from order scheduled times
+      const hours = new Set();
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      allOrders.forEach(order => {
+        const scheduledTime = new Date(order.scheduled_at || order.order_time);
+        if (scheduledTime >= today) {
+          hours.add(scheduledTime.getHours());
+        }
+      });
+      
+      // Convert to array and sort
+      const sortedHours = [...hours].sort((a, b) => a - b);
+      
+      // Create filter buttons
+      sortedHours.forEach(hour => {
+        const endHour = hour + 1;
+        const hourFormatted = hour.toString().padStart(2, '0');
+        const endHourFormatted = endHour.toString().padStart(2, '0');
+        
+        const filterBtn = document.createElement('button');
+        filterBtn.className = 'time-filter-btn';
+        filterBtn.dataset.filter = hour;
+        filterBtn.textContent = `${hourFormatted}:00 - ${endHourFormatted}:00`;
+        
+        // Count orders in this time block
+        const count = allOrders.filter(order => {
+          const scheduledTime = new Date(order.scheduled_at || order.order_time);
+          return scheduledTime.getHours() === hour;
+        }).length;
+        
+        if (count > 0) {
+          filterBtn.textContent += ` (${count})`;
+        }
+        
+        timeFilterElement.appendChild(filterBtn);
+      });
+      
+      // Reapply active filter styling
+      const activeFilterBtn = timeFilterElement.querySelector(`[data-filter="${activeFilter}"]`);
+      if (activeFilterBtn) {
+        activeFilterBtn.classList.add('active');
+      } else {
+        // If active filter doesn't exist, default to "All Today"
+        allFilterBtn.classList.add('active');
+        activeFilter = 'all';
+      }
+    }
+    
+    // Render orders based on active filter
+    function renderFilteredOrders() {
+      // Clear container
+      ordersContainerElement.innerHTML = '';
+      
+      if (allOrders.length === 0) {
+        ordersContainerElement.innerHTML = '<div class="no-orders">No orders scheduled for today</div>';
+        return;
+      }
+      
+      if (activeFilter === 'all') {
+        // Group orders by hour
+        const ordersByHour = {};
+        
+        allOrders.forEach(order => {
+          const scheduledTime = new Date(order.scheduled_at || order.order_time);
+          const hour = scheduledTime.getHours();
+          
+          if (!ordersByHour[hour]) {
+            ordersByHour[hour] = [];
+          }
+          
+          ordersByHour[hour].push(order);
+        });
+        
+        // Sort hours and render each time block
+        Object.keys(ordersByHour)
+          .sort((a, b) => parseInt(a) - parseInt(b))
+          .forEach(hour => {
+            renderTimeBlock(hour, ordersByHour[hour]);
+          });
+      } else {
+        // Filter orders for specific hour
+        const hour = parseInt(activeFilter);
+        const filteredOrders = allOrders.filter(order => {
+          const scheduledTime = new Date(order.scheduled_at || order.order_time);
+          return scheduledTime.getHours() === hour;
+        });
+        
+        renderTimeBlock(hour, filteredOrders);
+      }
+    }
+    
+    // Render a time block with its orders
+    function renderTimeBlock(hour, orders) {
+      const endHour = (parseInt(hour) + 1) % 24;
+      const hourFormatted = hour.toString().padStart(2, '0');
+      const endHourFormatted = endHour.toString().padStart(2, '0');
+      
+      const timeBlock = document.createElement('div');
+      timeBlock.className = 'time-block';
+      
+      const header = document.createElement('div');
+      header.className = 'time-block-header';
+      header.innerHTML = `
+        <span>${hourFormatted}:00 - ${endHourFormatted}:00</span>
+        <span class="count">${orders.length} orders</span>
+      `;
+      
+      const content = document.createElement('div');
+      content.className = 'time-block-content';
+      
+      if (orders.length === 0) {
+        content.innerHTML = '<div class="no-orders">No orders in this time slot</div>';
+      } else {
+        // Sort orders by scheduled time
+        orders.sort((a, b) => {
+          const aTime = new Date(a.scheduled_at || a.order_time);
+          const bTime = new Date(b.scheduled_at || b.order_time);
+          return aTime - bTime;
+        });
+        
+        // Create order cards
+        orders.forEach(order => {
+          const orderCard = createOrderCard(order);
+          content.appendChild(orderCard);
+        });
+      }
+      
+      timeBlock.appendChild(header);
+      timeBlock.appendChild(content);
+      ordersContainerElement.appendChild(timeBlock);
+    }
+    
+    // Create an order card
+    function createOrderCard(order) {
+      const scheduledTime = new Date(order.scheduled_at || order.order_time);
+      const statusClass = order.status.replace('_', '-');
+      
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.dataset.orderId = order.id;
+      
+      // Different border color based on status
+      if (order.status === 'pending') {
+        card.style.borderLeft = '5px solid #3498db'; // Blue for pending
+      } else if (order.status === 'in_progress') {
+        card.style.borderLeft = '5px solid #f39c12'; // Orange for in-progress
+      } else if (order.status === 'done') {
+        card.style.borderLeft = '5px solid #2ecc71'; // Green for done
+      }
+      
+      // Fetch items for this order if not already provided
+      let itemsHtml = '<p>Loading items...</p>';
+      
+      if (order.items) {
+        itemsHtml = createItemsList(order.items);
+      }
+      
+      card.innerHTML = `
+        <div class="card-header">
+          <div class="card-title">Order #${order.order_number} - ${order.customer || 'No name'}</div>
+          <div class="card-time">${formatTime(scheduledTime)}</div>
+        </div>
+        <div class="card-body">
+          <div class="status-badge status-${statusClass}">${order.status.replace('_', ' ')}</div>
+          <div class="order-items">
+            ${itemsHtml}
+          </div>
+        </div>
+        <div class="card-footer">
+          <button class="btn btn-primary edit-order-btn">Edit Order</button>
+        </div>
+      `;
+      
+      // Add click event for edit button
+      const editBtn = card.querySelector('.edit-order-btn');
+      editBtn.addEventListener('click', () => openEditModal(order));
+      
+      return card;
+    }
+    
+    // Create items list HTML
+    function createItemsList(items) {
+      if (!items || items.length === 0) {
+        return '<p>No items</p>';
+      }
+      
+      // Group items by station
+      const itemsByStation = {};
+      
+      items.forEach(item => {
+        if (!itemsByStation[item.station]) {
+          itemsByStation[item.station] = [];
+        }
+        
+        itemsByStation[item.station].push(item);
+      });
+      
+      let html = '';
+      
+      // Display items by station
+      Object.keys(itemsByStation).forEach(station => {
+        html += `<div class="station-header">${station.charAt(0).toUpperCase() + station.slice(1)}</div>`;
+        
+        itemsByStation[station].forEach(item => {
+          html += `
+            <div class="order-item">
+              <div class="item-name">${item.item_name}</div>
+              <div class="item-quantity">x${item.quantity}</div>
+            </div>
+          `;
+        });
+      });
+      
+      return html;
+    }
+    
+    // Open edit modal for order
+    async function openEditModal(order) {
+      modalTitle.textContent = order.id ? 'Edit Order' : 'Create New Order';
+      
+      // Clear form
+      orderForm.reset();
+      itemsContainer.innerHTML = '';
+      
+      if (order.id) {
+        // Editing existing order
+        orderIdInput.value = order.id;
+        customerInput.value = order.customer || '';
+        
+        const scheduledDate = new Date(order.scheduled_at || order.order_time);
+        scheduledAtInput.value = formatDateTimeForInput(scheduledDate);
+        
+        statusInput.value = order.status || 'pending';
+        
+        // If order doesn't have items loaded, fetch them
+        let items = order.items;
+        
+        if (!items) {
+          try {
+            const response = await fetch(`http://localhost:3000/orders/${order.id}/items`);
+            
+            if (!response.ok) {
+              throw new Error('Failed to fetch order items');
+            }
+            
+            items = await response.json();
+          } catch (error) {
+            console.error('Error fetching order items:', error);
+            items = [];
+          }
+        }
+        
+        // Add item editors
+        items.forEach(item => addItemEditor(item));
+      } else {
+        // Creating new order
+        orderIdInput.value = '';
+        
+        // Set default scheduled time to next hour
+        const nextHour = new Date();
+        nextHour.setHours(nextHour.getHours() + 1, 0, 0, 0);
+        scheduledAtInput.value = formatDateTimeForInput(nextHour);
+        
+        // Add one empty item editor
+        addItemEditor();
+      }
+      
+      // Show modal
+      editOrderModal.classList.add('show');
+    }
+    
+    // Save order changes
+    async function saveOrderChanges() {
+      // Validate form
+      if (!orderForm.checkValidity()) {
+        orderForm.reportValidity();
+        return;
+      }
+      
+      const orderId = orderIdInput.value;
+      const isNewOrder = !orderId;
+      
+      // Collect order data
+      const orderData = {
+        customer: customerInput.value,
+        scheduled_at: new Date(scheduledAtInput.value).toISOString(),
+        status: statusInput.value
+      };
+      
+      // For new orders, add additional fields
+      if (isNewOrder) {
+        orderData.source = 'manager';
+        orderData.order_time = new Date().toISOString();
+        
+        // Generate order number
+        const date = new Date();
+        const orderNumber = `MGR-${date.getFullYear()}${(date.getMonth() + 1).toString().padStart(2, '0')}${date.getDate().toString().padStart(2, '0')}-${date.getHours().toString().padStart(2, '0')}${date.getMinutes().toString().padStart(2, '0')}`;
+        
+        orderData.order_number = orderNumber;
+      }
+      
+      // Collect items data
+      const itemEditors = itemsContainer.querySelectorAll('.item-editor');
+      const itemsData = Array.from(itemEditors).map(editor => {
+        const itemId = editor.dataset.itemId;
+        return {
+          id: itemId || undefined, // Only include ID if it exists
+          item_name: editor.querySelector('.item-name').value,
+          quantity: parseInt(editor.querySelector('.item-quantity').value),
+          station: editor.querySelector('.item-station').value
+        };
+      });
+      
+      try {
+        let response;
+        
+        if (isNewOrder) {
+          // Create new order
+          response = await fetch('http://localhost:3000/orders', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              order: orderData,
+              items: itemsData
+            })
+          });
+        } else {
+          // Update existing order
+          response = await fetch(`http://localhost:3000/orders/${orderId}`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              order: orderData,
+              items: itemsData
+            })
+          });
+        }
+        
+        // New code to handle the special 207 status (partial success)
+        if (response.status === 207) {
+          const responseData = await response.json();
+          
+          // Show notification about partial update
+          showNotification('Order was updated, but new items could not be added due to system limitations. You may need to create a separate order for new items.');
+          
+          // Close the modal and reload orders
+          closeEditModal();
+          await loadOrders();
+          return;
+        }
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to save order');
+        }
+        
+        // Close modal and reload orders
+        closeEditModal();
+        await loadOrders();
+        
+      } catch (error) {
+        console.error('Error saving order:', error);
+        alert(`Failed to save order: ${error.message}`);
+      }
+    }
+    
+    // Close edit modal
+    function closeEditModal() {
+      editOrderModal.classList.remove('show');
+    }
+    
+    // Format date for datetime-local input
+    function formatDateTimeForInput(date) {
+      return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}T${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+    }
+    
+    // Format date/time for display
+    function formatTime(date) {
+      return date.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+    
+    // Event listeners
+    timeFilterElement.addEventListener('click', (e) => {
+      if (e.target.classList.contains('time-filter-btn')) {
+        // Update active filter
+        document.querySelectorAll('.time-filter-btn').forEach(btn => {
+          btn.classList.remove('active');
+        });
+        
+        e.target.classList.add('active');
+        activeFilter = e.target.dataset.filter;
+        
+        // Re-render orders
+        renderFilteredOrders();
+      }
+    });
+    
+    createOrderBtn.addEventListener('click', () => openEditModal({}));
+    refreshBtn.addEventListener('click', loadOrders);
+    closeModalBtn.addEventListener('click', closeEditModal);
+    cancelBtn.addEventListener('click', closeEditModal);
+    saveBtn.addEventListener('click', saveOrderChanges);
+    addItemBtn.addEventListener('click', () => addItemEditor());
+    
+    // When clicking outside the modal content, close it
+    editOrderModal.addEventListener('click', (e) => {
+      if (e.target === editOrderModal) {
+        closeEditModal();
+      }
+    });
+    
+    // Handle real-time updates
+    function setupRealtimeUpdates() {
+      // Subscribe to orders table
+      subscribeToChanges('orders', async () => {
+        // When orders change, refresh data
+        await loadOrders();
+      });
+      
+      // Subscribe to items table
+      subscribeToChanges('items', async () => {
+        // When items change, refresh data
+        await loadOrders();
+      });
+    }
+    
+    // Initialize the page
+    document.addEventListener('DOMContentLoaded', () => {
+      loadOrders();
+      setupRealtimeUpdates();
+      
+      // Refresh data periodically (every minute) as a backup
+      setInterval(loadOrders, 60000);
+    });
+
+    // Show notification
+    function showNotification(message) {
+      const notification = document.getElementById('notification');
+      const notificationMessage = document.getElementById('notification-message');
+      
+      notificationMessage.textContent = message;
+      notification.style.display = 'block';
+      
+      // Auto-hide after 10 seconds
+      setTimeout(() => {
+        notification.style.display = 'none';
+      }, 10000);
+    }
+    
+    // Close notification
+    document.getElementById('notification-close').addEventListener('click', () => {
+      document.getElementById('notification').style.display = 'none';
+    });
+
+    // Add item editor to form
+    function addItemEditor(item = null) {
+      const clone = document.importNode(itemTemplate.content, true);
+      const editor = clone.querySelector('.item-editor');
+      
+      const nameInput = editor.querySelector('.item-name');
+      const quantityInput = editor.querySelector('.item-quantity');
+      const stationInput = editor.querySelector('.item-station');
+      const removeBtn = editor.querySelector('.remove-item-btn');
+      
+      // Fill with item data if provided
+      if (item) {
+        // Set the item ID as a data attribute
+        editor.dataset.itemId = item.id || '';
+        
+        nameInput.value = item.item_name || '';
+        quantityInput.value = item.quantity || 1;
+        stationInput.value = item.station || 'grill';
+      }
+      
+      // Add remove button event
+      removeBtn.addEventListener('click', () => {
+        editor.remove();
+      });
+      
+      itemsContainer.appendChild(editor);
+    }
+  </script>
+</body>
+</html> 

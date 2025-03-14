@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kitchen Station | Restaurant Order Management</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    // Make Supabase globally available as supabaseJs
+    const supabaseJs = supabase;
+  </script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">Restaurant Order Management</div>
+      <div class="station-header">
+        <div class="station-name">Kitchen Station</div>
+        <div class="clock" id="clock"></div>
+      </div>
+    </header>
+    
+    <main>
+      <div class="summary-panel">
+        <div class="summary-title">Current Totals</div>
+        <ul class="summary-list" id="summary-list">
+          <!-- Summary items will be inserted here -->
+          <li class="summary-item">
+            <span class="summary-label">Loading...</span>
+            <span class="summary-value">-</span>
+          </li>
+        </ul>
+      </div>
+      
+      <div class="items-grid" id="items-container">
+        <!-- Order items will be inserted here -->
+      </div>
+    </main>
+  </div>
+
+  <script src="supabase-client.js"></script>
+  <script>
+    // Select DOM elements
+    const clockElement = document.getElementById('clock');
+    const summaryListElement = document.getElementById('summary-list');
+    const itemsContainerElement = document.getElementById('items-container');
+    
+    // Initialize clock
+    function updateClock() {
+      const now = new Date();
+      clockElement.textContent = now.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+    }
+    
+    // Update clock every second
+    updateClock();
+    setInterval(updateClock, 1000);
+    
+    // Load initial data
+    async function loadInitialData() {
+      try {
+        // Fetch data for kitchen station from the backend
+        const response = await fetch('http://localhost:3000/stations/kitchen');
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch data');
+        }
+        
+        const data = await response.json();
+        
+        // Update the summary panel
+        updateSummary(data);
+        
+        // Render each item with its orders
+        renderItems(data.items);
+        
+      } catch (error) {
+        console.error('Error loading initial data:', error);
+      }
+    }
+    
+    // Update the summary panel
+    function updateSummary(data) {
+      // Clear existing summary
+      summaryListElement.innerHTML = '';
+      
+      // If no items, show a message
+      if (!data.items || data.items.length === 0) {
+        const emptyItem = document.createElement('li');
+        emptyItem.className = 'summary-item';
+        emptyItem.innerHTML = `
+          <span class="summary-label">No pending orders</span>
+          <span class="summary-value">-</span>
+        `;
+        summaryListElement.appendChild(emptyItem);
+        return;
+      }
+      
+      // Create a summary item for each distinct item
+      data.items.forEach(item => {
+        const summaryItem = document.createElement('li');
+        summaryItem.className = 'summary-item';
+        summaryItem.innerHTML = `
+          <span class="summary-label">${item.name}</span>
+          <span class="summary-value">${item.total}</span>
+        `;
+        summaryListElement.appendChild(summaryItem);
+      });
+      
+      // Add total row
+      const totalItem = document.createElement('li');
+      totalItem.className = 'summary-item total';
+      totalItem.innerHTML = `
+        <span class="summary-label">TOTAL</span>
+        <span class="summary-value">${data.totalQuantity}</span>
+      `;
+      summaryListElement.appendChild(totalItem);
+    }
+    
+    // Render item cards
+    function renderItems(items) {
+      // Clear existing items
+      itemsContainerElement.innerHTML = '';
+      
+      // If no items, show a message
+      if (!items || items.length === 0) {
+        const emptyMessage = document.createElement('div');
+        emptyMessage.className = 'card';
+        emptyMessage.innerHTML = `
+          <div class="card-body">
+            <p>No pending orders for this station.</p>
+          </div>
+        `;
+        itemsContainerElement.appendChild(emptyMessage);
+        return;
+      }
+      
+      // Sort items by name
+      items.sort((a, b) => a.name.localeCompare(b.name));
+      
+      // Create a card for each item
+      items.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.style.borderLeft = '5px solid #4CAF50'; // Green for kitchen
+        card.innerHTML = `
+          <div class="card-header">
+            <div class="card-title">${item.name}</div>
+            <div class="card-time">Total: ${item.total}</div>
+          </div>
+          <div class="card-body">
+            <div class="order-items" id="order-items-${item.name.replace(/\s+/g, '-')}">
+              <!-- Orders for this item will be inserted here -->
+            </div>
+          </div>
+        `;
+        itemsContainerElement.appendChild(card);
+        
+        // Add each order for this item
+        const orderItemsContainer = card.querySelector(`#order-items-${item.name.replace(/\s+/g, '-')}`);
+        
+        item.orders.forEach(order => {
+          const orderEl = document.createElement('div');
+          orderEl.className = 'order-item';
+          orderEl.innerHTML = `
+            <div class="item-info">
+              <span>Order #${order.order_id}</span>
+              <span class="card-time">${formatTime(order.order_time)}</span>
+              ${order.customer ? `<span> - ${order.customer}</span>` : ''}
+            </div>
+            <div class="item-quantity">${order.quantity}x</div>
+            <div class="assembly-station">Assembly: ${getAssemblyStationForItem(item.name)}</div>
+          `;
+          orderItemsContainer.appendChild(orderEl);
+        });
+      });
+    }
+    
+    // Handle real-time updates
+    function setupRealtimeUpdates() {
+      // Subscribe to orders table
+      subscribeToChanges('orders', async (newOrder) => {
+        // When a new order comes in, refresh the data
+        await loadInitialData();
+        
+        // Play a notification sound
+        const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+        audio.play();
+      });
+    }
+    
+    // Initialize the page
+    document.addEventListener('DOMContentLoaded', () => {
+      loadInitialData();
+      setupRealtimeUpdates();
+      
+      // Refresh data periodically (every 30 seconds) as a backup
+      setInterval(loadInitialData, 30000);
+    });
+
+    // Add function to determine which assembly station an item belongs to
+    function getAssemblyStationForItem(itemName) {
+      // Categorize items by type
+      if (itemName.includes('Frango') || itemName.includes('Espetada') || 
+          itemName.includes('Entrecosto') || itemName.includes('Costeleta') ||
+          itemName.includes('Bife') || itemName.includes('Picanha')) {
+        return 'Main Station';
+      } else if (itemName.includes('Batata') || itemName.includes('Fries')) {
+        return 'Side Station';
+      } else if (itemName.includes('Refrigerante') || itemName.includes('Vinho') || 
+                 itemName.includes('Bebida') || itemName.includes('Litro')) {
+        return 'Drink Station';
+      } else if (itemName.includes('Salada') || itemName.includes('Legumes')) {
+        return 'Salad Station';
+      } else {
+        return 'General Assembly';
+      }
+    }
+  </script>
+</body>
+</html> 

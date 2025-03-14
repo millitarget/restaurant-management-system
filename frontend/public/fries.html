@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fries Station | Restaurant Order Management</title>
+  <link rel="stylesheet" href="styles.css">
+  <!-- Supabase JS library -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    // Make Supabase globally available as supabaseJs
+    const supabaseJs = supabase;
+  </script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">Restaurant Order Management</div>
+      <div class="station-header">
+        <div class="station-name">Fries Station</div>
+        <div class="clock" id="clock"></div>
+      </div>
+    </header>
+    
+    <main>
+      <!-- Add workflow diagram -->
+      <div class="station-flow">
+        <div class="station-step">
+          <div class="station-step-icon grill">G</div>
+          <div class="station-step-name">Grill/Kitchen</div>
+          <div class="station-step-status">Must be completed first</div>
+        </div>
+        <div class="station-step-arrow"></div>
+        <div class="station-step">
+          <div class="station-step-icon fries">F</div>
+          <div class="station-step-name">Fries</div>
+          <div class="station-step-status">You are here</div>
+        </div>
+        <div class="station-step-arrow"></div>
+        <div class="station-step">
+          <div class="station-step-icon assembly">A</div>
+          <div class="station-step-name">Assembly</div>
+        </div>
+      </div>
+      
+      <div class="info-message">
+        <strong>Note:</strong> Orders will only appear here when their grill and kitchen items are completed.
+      </div>
+      
+      <div class="summary-panel">
+        <div class="summary-title">Current Totals</div>
+        <ul class="summary-list" id="summary-list">
+          <!-- Summary items will be inserted here -->
+          <li class="summary-item">
+            <span class="summary-label">Loading...</span>
+            <span class="summary-value">-</span>
+          </li>
+        </ul>
+      </div>
+      
+      <div class="items-grid" id="items-container">
+        <!-- Order items will be inserted here -->
+      </div>
+    </main>
+  </div>
+
+  <script src="supabase-client.js"></script>
+  <script>
+    // Select DOM elements
+    const clockElement = document.getElementById('clock');
+    const summaryListElement = document.getElementById('summary-list');
+    const itemsContainerElement = document.getElementById('items-container');
+    
+    // Initialize clock
+    function updateClock() {
+      const now = new Date();
+      clockElement.textContent = now.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit'
+      });
+    }
+    
+    // Update clock every second
+    updateClock();
+    setInterval(updateClock, 1000);
+    
+    // Load initial data
+    async function loadInitialData() {
+      try {
+        // Fetch data for fries station from the backend
+        const response = await fetch('http://localhost:3000/stations/fries');
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch data');
+        }
+        
+        const data = await response.json();
+        console.log('Received data:', data);
+        
+        // Render orders and their items
+        renderOrders(data);
+        
+      } catch (error) {
+        console.error('Error loading initial data:', error);
+        itemsContainerElement.innerHTML = `
+          <div class="error-message">
+            Failed to load orders: ${error.message}. Please try refreshing the page.
+          </div>
+        `;
+      }
+    }
+    
+    // Render orders and items
+    function renderOrders(data) {
+      // Clear existing items
+      itemsContainerElement.innerHTML = '';
+      summaryListElement.innerHTML = '';
+      
+      // If no orders, show a message
+      if (!data || data.length === 0) {
+        const emptyMessage = document.createElement('div');
+        emptyMessage.className = 'card';
+        emptyMessage.innerHTML = `
+          <div class="card-body">
+            <p>No pending orders for this station.</p>
+            <p class="note">Orders will appear here once their grill and kitchen items are completed.</p>
+          </div>
+        `;
+        itemsContainerElement.appendChild(emptyMessage);
+        
+        // Add empty summary
+        const emptyItem = document.createElement('li');
+        emptyItem.className = 'summary-item';
+        emptyItem.innerHTML = `
+          <span class="summary-label">No pending orders</span>
+          <span class="summary-value">-</span>
+        `;
+        summaryListElement.appendChild(emptyItem);
+        return;
+      }
+      
+      // Collect summary data
+      const summary = {};
+      let totalQuantity = 0;
+      
+      // Process each order
+      data.forEach(order => {
+        const orderCard = document.createElement('div');
+        orderCard.className = 'card';
+        orderCard.style.borderLeft = '5px solid #FF9800'; // Orange for fries
+        
+        // Order header
+        let orderHTML = `
+          <div class="card-header">
+            <div class="card-title">Order #${order.order_number} - ${order.customer || 'No name'}</div>
+            <div class="card-time">${formatTime(new Date(order.scheduled_at || order.order_time))}</div>
+          </div>
+          <div class="card-body">
+            <div class="order-items">`;
+        
+        // Process each item in the order
+        order.items.forEach(item => {
+          // Update summary
+          if (!summary[item.item_name]) {
+            summary[item.item_name] = 0;
+          }
+          summary[item.item_name] += item.quantity;
+          totalQuantity += item.quantity;
+          
+          // Determine item status class
+          const statusClass = item.item_status || 'pending';
+          
+          // Add item to order
+          orderHTML += `
+            <div class="order-item" data-item-id="${item.id}">
+              <div class="item-name">${item.item_name}</div>
+              <div class="item-quantity">x${item.quantity}</div>
+              <div class="item-status ${statusClass}">${item.item_status || 'pending'}</div>
+              <div class="assembly-station">Assembly: ${getAssemblyStationForItem(item.item_name)}</div>
+            </div>`;
+        });
+        
+        orderHTML += `
+            </div>
+          </div>`;
+        
+        orderCard.innerHTML = orderHTML;
+        itemsContainerElement.appendChild(orderCard);
+      });
+      
+      // Update summary panel
+      Object.keys(summary).sort().forEach(itemName => {
+        const summaryItem = document.createElement('li');
+        summaryItem.className = 'summary-item';
+        summaryItem.innerHTML = `
+          <span class="summary-label">${itemName}</span>
+          <span class="summary-value">${summary[itemName]}</span>
+        `;
+        summaryListElement.appendChild(summaryItem);
+      });
+      
+      // Add total row
+      const totalItem = document.createElement('li');
+      totalItem.className = 'summary-item total';
+      totalItem.innerHTML = `
+        <span class="summary-label">TOTAL</span>
+        <span class="summary-value">${totalQuantity}</span>
+      `;
+      summaryListElement.appendChild(totalItem);
+    }
+    
+    // Update item status
+    async function updateItemStatus(itemId, newStatus) {
+      try {
+        const response = await fetch(`http://localhost:3000/stations/item/${itemId}/status`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ status: newStatus })
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to update item status');
+        }
+        
+        console.log(`Item ${itemId} status updated to ${newStatus}`);
+        
+        // Update the UI
+        const itemElement = document.querySelector(`[data-item-id="${itemId}"]`);
+        if (itemElement) {
+          // Update status indicator
+          const statusElement = itemElement.querySelector('.item-status');
+          if (statusElement) {
+            statusElement.className = `item-status ${newStatus}`;
+            statusElement.textContent = newStatus;
+          }
+          
+          // Update action buttons
+          const actionsElement = itemElement.querySelector('.item-actions');
+          if (actionsElement) {
+            if (newStatus === 'in_progress') {
+              actionsElement.innerHTML = `
+                <button class="item-action-btn btn-complete" onclick="updateItemStatus(${itemId}, 'done')">Complete</button>
+              `;
+            } else if (newStatus === 'done') {
+              actionsElement.innerHTML = '';
+            }
+          }
+        }
+        
+        // Reload all data after a short delay to see any workflow changes
+        setTimeout(() => {
+          loadInitialData();
+        }, 1000);
+      } catch (error) {
+        console.error('Error updating item status:', error);
+        alert('Failed to update item status. Please try again.');
+      }
+    }
+    
+    // Format date/time for display
+    function formatTime(date) {
+      return date.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+    
+    // Handle real-time updates
+    function setupRealtimeUpdates() {
+      // Subscribe to orders table
+      subscribeToChanges('orders', async (newOrder) => {
+        // When a new order comes in, refresh the data
+        await loadInitialData();
+        
+        // Play a notification sound
+        const audio = new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3');
+        audio.play();
+      });
+      
+      // Subscribe to items table for status updates
+      subscribeToChanges('items', async (newItem) => {
+        // When an item is updated, refresh the data
+        await loadInitialData();
+      });
+    }
+    
+    // Initialize the page
+    document.addEventListener('DOMContentLoaded', () => {
+      loadInitialData();
+      setupRealtimeUpdates();
+      
+      // Refresh data periodically (every 30 seconds) as a backup
+      setInterval(loadInitialData, 30000);
+    });
+
+    // Add function to determine which assembly station an item belongs to
+    function getAssemblyStationForItem(itemName) {
+      // Categorize items by type
+      if (itemName.includes('Frango') || itemName.includes('Espetada') || 
+          itemName.includes('Entrecosto') || itemName.includes('Costeleta') ||
+          itemName.includes('Bife') || itemName.includes('Picanha')) {
+        return 'Main Station';
+      } else if (itemName.includes('Batata') || itemName.includes('Fries')) {
+        return 'Side Station';
+      } else if (itemName.includes('Refrigerante') || itemName.includes('Vinho') || 
+                 itemName.includes('Bebida') || itemName.includes('Litro')) {
+        return 'Drink Station';
+      } else if (itemName.includes('Salada') || itemName.includes('Legumes')) {
+        return 'Salad Station';
+      } else {
+        return 'General Assembly';
+      }
+    }
+  </script>
+</body>
+</html> 

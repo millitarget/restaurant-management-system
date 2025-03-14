@@ -1,0 +1,32 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Kitchen Station | Restaurant Order Management</title><link rel="stylesheet" href="styles.css"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script>let supabaseJs=supabase</script></head><body><div class="container"><header><div class="logo">Restaurant Order Management</div><div class="station-header"><div class="station-name">Kitchen Station</div><div class="clock" id="clock"></div></div></header><main><div class="summary-panel"><div class="summary-title">Current Totals</div><ul class="summary-list" id="summary-list"><li class="summary-item"><span class="summary-label">Loading...</span> <span class="summary-value">-</span></li></ul></div><div class="items-grid" id="items-container"></div></main></div><script src="supabase-client.js"></script><script>let clockElement=document.getElementById("clock"),summaryListElement=document.getElementById("summary-list"),itemsContainerElement=document.getElementById("items-container");function updateClock(){var e=new Date;clockElement.textContent=e.toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit",second:"2-digit"})}async function loadInitialData(){try{var e=await fetch("http://localhost:3000/stations/kitchen");if(!e.ok)throw new Error("Failed to fetch data");var a=await e.json();updateSummary(a),renderItems(a.items)}catch(e){console.error("Error loading initial data:",e)}}function updateSummary(e){var a;summaryListElement.innerHTML="",e.items&&0!==e.items.length?(e.items.forEach(e=>{var a=document.createElement("li");a.className="summary-item",a.innerHTML=`
+          <span class="summary-label">${e.name}</span>
+          <span class="summary-value">${e.total}</span>
+        `,summaryListElement.appendChild(a)}),(a=document.createElement("li")).className="summary-item total",a.innerHTML=`
+        <span class="summary-label">TOTAL</span>
+        <span class="summary-value">${e.totalQuantity}</span>
+      `,summaryListElement.appendChild(a)):((e=document.createElement("li")).className="summary-item",e.innerHTML=`
+          <span class="summary-label">No pending orders</span>
+          <span class="summary-value">-</span>
+        `,summaryListElement.appendChild(e))}function renderItems(e){itemsContainerElement.innerHTML="",e&&0!==e.length?(e.sort((e,a)=>e.name.localeCompare(a.name)),e.forEach(t=>{var e=document.createElement("div");e.className="card",e.style.borderLeft="5px solid #4CAF50",e.innerHTML=`
+          <div class="card-header">
+            <div class="card-title">${t.name}</div>
+            <div class="card-time">Total: ${t.total}</div>
+          </div>
+          <div class="card-body">
+            <div class="order-items" id="order-items-${t.name.replace(/\s+/g,"-")}">
+              <!-- Orders for this item will be inserted here -->
+            </div>
+          </div>
+        `,itemsContainerElement.appendChild(e);let n=e.querySelector("#order-items-"+t.name.replace(/\s+/g,"-"));t.orders.forEach(e=>{var a=document.createElement("div");a.className="order-item",a.innerHTML=`
+            <div class="item-info">
+              <span>Order #${e.order_id}</span>
+              <span class="card-time">${formatTime(e.order_time)}</span>
+              ${e.customer?`<span> - ${e.customer}</span>`:""}
+            </div>
+            <div class="item-quantity">${e.quantity}x</div>
+            <div class="assembly-station">Assembly: ${getAssemblyStationForItem(t.name)}</div>
+          `,n.appendChild(a)})})):((e=document.createElement("div")).className="card",e.innerHTML=`
+          <div class="card-body">
+            <p>No pending orders for this station.</p>
+          </div>
+        `,itemsContainerElement.appendChild(e))}function setupRealtimeUpdates(){subscribeToChanges("orders",async e=>{await loadInitialData(),new Audio("https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3").play()})}function getAssemblyStationForItem(e){return e.includes("Frango")||e.includes("Espetada")||e.includes("Entrecosto")||e.includes("Costeleta")||e.includes("Bife")||e.includes("Picanha")?"Main Station":e.includes("Batata")||e.includes("Fries")?"Side Station":e.includes("Refrigerante")||e.includes("Vinho")||e.includes("Bebida")||e.includes("Litro")?"Drink Station":e.includes("Salada")||e.includes("Legumes")?"Salad Station":"General Assembly"}updateClock(),setInterval(updateClock,1e3),document.addEventListener("DOMContentLoaded",()=>{loadInitialData(),setupRealtimeUpdates(),setInterval(loadInitialData,3e4)})</script></body></html>

@@ -1,0 +1,14 @@
+{
+  "name": "restaurant-order-management-frontend",
+  "version": "1.0.0",
+  "description": "Frontend for restaurant order management system",
+  "scripts": {
+    "start": "http-server -c-1 -p 8080"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.31.0"
+  },
+  "devDependencies": {
+    "http-server": "^14.1.1"
+  }
+} 

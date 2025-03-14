@@ -1,0 +1,1287 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Atendimento Telefónico</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-client.js"></script>
+  <style>
+    :root {
+      --primary-color: #5D4037;
+      --primary-light: #8D6E63;
+      --primary-dark: #3E2723;
+      --accent-color: #FF7043;
+      --accent-light: #FF9E80;
+      --accent-dark: #F4511E;
+      --background-color: #EFEBE9;
+      --card-color: #FFFFFF;
+      --text-primary: #212121;
+      --text-secondary: #757575;
+      --text-light: #FFFFFF;
+      --border-color: #D7CCC8;
+      --shadow-color: rgba(0,0,0,0.1);
+      --success-color: #43A047;
+      --error-color: #E53935;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--background-color);
+      margin: 0;
+      padding: 10px;
+      overflow: hidden;
+      height: 100vh;
+      box-sizing: border-box;
+      color: var(--text-primary);
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: 7fr 3fr;
+      grid-template-rows: auto 1fr;
+      gap: 8px;
+      height: 100%;
+      max-height: 100%;
+      padding-top: 5px;
+    }
+
+    .customer-section {
+      grid-column: 1;
+      display: grid;
+      grid-template-columns: 2fr 3fr;
+      gap: 10px;
+      background-color: var(--card-color);
+      padding: 8px 10px;
+      border-radius: 8px;
+      box-shadow: 0 1px 4px var(--shadow-color);
+    }
+    
+    .customer-input {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .customer-input label {
+      white-space: nowrap;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      width: 60px;
+    }
+    
+    .customer-input input {
+      flex-grow: 1;
+      height: 36px;
+      box-sizing: border-box;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 0 12px;
+      font-size: 0.95rem;
+      transition: all 0.2s;
+    }
+    
+    .time-selection {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .time-selection-header {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    
+    .time-selection-header label {
+      white-space: nowrap;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      width: 60px;
+    }
+
+    .meal-period-buttons {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 5px;
+      flex-grow: 1;
+    }
+
+    .meal-btn, .asap-btn {
+      background-color: var(--primary-light);
+      color: var(--text-light);
+      border: none;
+      border-radius: 6px;
+      padding: 5px 0;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+
+    .meal-btn:hover, .asap-btn:hover {
+      background-color: var(--primary-color);
+    }
+
+    .meal-btn.active, .asap-btn.active {
+      background-color: var(--accent-color);
+      box-shadow: 0 2px 5px rgba(255, 112, 67, 0.3);
+    }
+    
+    .time-picker-wrapper {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+    }
+    
+    .time-picker-label {
+      white-space: nowrap;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text-secondary);
+      width: 60px;
+      visibility: hidden;
+    }
+
+    .time-picker-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      flex-grow: 1;
+    }
+    
+    .time-group {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    
+    .time-group-label {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+      text-align: center;
+    }
+    
+    .time-buttons-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 3px;
+    }
+    
+    .lunch-hours, .dinner-hours {
+      display: none;
+      grid-template-columns: repeat(4, 1fr);
+    }
+    
+    .time-btn {
+      background-color: var(--background-color);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      padding: 4px 2px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+      color: var(--text-primary);
+    }
+
+    .time-btn:hover {
+      background-color: var(--primary-light);
+      color: var(--text-light);
+    }
+
+    .time-btn.active {
+      background-color: var(--accent-color);
+      color: var(--text-light);
+      border-color: var(--accent-dark);
+    }
+
+    .time-display {
+      background-color: var(--accent-light);
+      color: var(--text-light);
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-weight: 500;
+      text-align: center;
+      font-size: 0.85rem;
+      align-self: flex-end;
+      margin-left: 68px;
+    }
+
+    .hour-btn, .minute-btn {
+      font-size: 0.8rem;
+      padding: 4px 0;
+    }
+
+    .categories {
+      grid-column: 1;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+      margin-bottom: -2px;
+    }
+
+    .category-btn {
+      background-color: var(--primary-light);
+      color: var(--text-light);
+      border: none;
+      border-radius: 8px;
+      padding: 8px 5px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-align: center;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 1px 3px var(--shadow-color);
+      font-weight: 500;
+    }
+
+    .category-btn:hover {
+      background-color: var(--primary-color);
+      transform: translateY(-2px);
+      box-shadow: 0 3px 6px var(--shadow-color);
+    }
+
+    .category-btn.active {
+      background-color: var(--accent-color);
+      box-shadow: 0 2px 5px rgba(255, 112, 67, 0.3);
+    }
+
+    .items-section {
+      grid-column: 1;
+      grid-row: 3;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background-color: var(--card-color);
+      padding: 6px;
+      border-radius: 8px;
+      box-shadow: 0 1px 4px var(--shadow-color);
+    }
+
+    .items-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: repeat(4, 1fr);
+      gap: 6px;
+      overflow: hidden;
+      flex-grow: 1;
+    }
+
+    .item-btn {
+      background-color: var(--card-color);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      height: auto;
+      font-size: 0.85rem;
+      box-shadow: 0 1px 2px var(--shadow-color);
+    }
+
+    .item-btn:hover {
+      border-color: var(--accent-color);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px var(--shadow-color);
+    }
+
+    .item-name {
+      font-weight: 600;
+      margin-bottom: 5px;
+      font-size: 0.85rem;
+      line-height: 1.2;
+      color: var(--text-primary);
+    }
+
+    .item-note {
+      font-size: 0.7rem;
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    .item-price {
+      color: var(--accent-color);
+      font-weight: 600;
+      position: absolute;
+      bottom: 6px;
+      right: 6px;
+      font-size: 0.8rem;
+    }
+
+    .pagination {
+      display: flex;
+      justify-content: center;
+      gap: 5px;
+      margin-top: 10px;
+    }
+
+    .page-btn {
+      background-color: var(--background-color);
+      border: none;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+      color: var(--text-secondary);
+    }
+
+    .page-btn:hover {
+      background-color: var(--primary-light);
+      color: var(--text-light);
+    }
+
+    .page-btn.active {
+      background-color: var(--accent-color);
+      color: var(--text-light);
+      box-shadow: 0 1px 3px rgba(255, 112, 67, 0.3);
+    }
+
+    .order-section {
+      grid-column: 2;
+      grid-row: 1 / span 3;
+      background-color: var(--card-color);
+      border-left: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 10px;
+      box-shadow: 0 1px 4px var(--shadow-color);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .order-section h2 {
+      margin: 0 0 10px 0;
+      font-size: 1.1rem;
+      color: var(--primary-dark);
+      border-bottom: 2px solid var(--primary-light);
+      padding-bottom: 6px;
+      text-align: center;
+      font-weight: 600;
+    }
+
+    .cart-items {
+      flex-grow: 1;
+      overflow-y: auto;
+      margin-bottom: 10px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 4px;
+      background-color: rgba(239, 235, 233, 0.3);
+    }
+
+    .cart-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px;
+      border-bottom: 1px solid var(--border-color);
+      font-size: 0.85rem;
+      background-color: var(--card-color);
+      border-radius: 4px;
+      margin-bottom: 4px;
+    }
+
+    .cart-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .item-info {
+      flex-grow: 1;
+    }
+
+    .quantity-controls {
+      display: flex;
+      align-items: center;
+    }
+
+    .quantity-btn {
+      background-color: var(--background-color);
+      border: none;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 0.95rem;
+      transition: all 0.2s;
+      color: var(--text-primary);
+    }
+
+    .quantity-btn:hover {
+      background-color: var(--primary-light);
+      color: var(--text-light);
+    }
+
+    .quantity {
+      margin: 0 6px;
+      font-weight: 500;
+      color: var(--primary-dark);
+    }
+
+    .total-section {
+      border-top: 2px solid var(--primary-light);
+      padding-top: 12px;
+      margin-top: auto;
+    }
+
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 15px;
+      font-size: 1.2rem;
+      font-weight: 500;
+      color: var(--primary-dark);
+    }
+
+    .total-amount {
+      font-weight: 700;
+      color: var(--accent-dark);
+    }
+
+    .send-order-btn {
+      background-color: var(--success-color);
+      color: var(--text-light);
+      border: none;
+      border-radius: 6px;
+      padding: 10px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s;
+      width: 100%;
+      font-weight: 600;
+      box-shadow: 0 2px 5px rgba(67, 160, 71, 0.3);
+      letter-spacing: 0.5px;
+    }
+
+    .send-order-btn:hover {
+      background-color: #2E7D32;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(67, 160, 71, 0.3);
+    }
+
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 12px 24px;
+      border-radius: 8px;
+      color: var(--text-light);
+      z-index: 1000;
+      animation: fadeIn 0.3s, fadeOut 0.3s 2.7s;
+      font-size: 0.95rem;
+      box-shadow: 0 3px 10px var(--shadow-color);
+    }
+
+    .notification-success {
+      background-color: var(--success-color);
+    }
+
+    .notification-error {
+      background-color: var(--error-color);
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin: 0;
+    }
+
+    .form-control {
+      padding: 6px 10px;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      font-size: 0.95rem;
+      flex-grow: 1;
+    }
+
+    .scheduled-time {
+      color: var(--accent-color);
+      font-size: 0.8rem;
+      font-weight: 600;
+      margin-top: 3px;
+    }
+
+    /* Custom datetime picker styling */
+    input[type="datetime-local"] {
+      font-family: inherit;
+      color: var(--text-primary);
+      padding-right: 10px;
+    }
+
+    @keyframes fadeIn {
+      from {opacity: 0;}
+      to {opacity: 1;}
+    }
+
+    @keyframes fadeOut {
+      from {opacity: 1;}
+      to {opacity: 0;}
+    }
+
+    /* Responsive adjustments */
+    @media (max-height: 700px) {
+      .item-btn {
+        padding: 6px;
+      }
+      
+      .items-grid {
+        grid-template-rows: repeat(3, 1fr);
+      }
+    }
+
+    .time-indicator {
+      position: absolute;
+      top: 10px;
+      right: 30%;
+      font-weight: 500;
+      color: var(--primary-dark);
+    }
+
+    .back-link {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background-color: var(--primary-dark);
+      color: var(--text-light);
+      text-decoration: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-weight: 500;
+      font-size: 0.9rem;
+      box-shadow: 0 1px 3px var(--shadow-color);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      z-index: 100;
+    }
+    
+    .back-link:hover {
+      background-color: var(--primary-light);
+    }
+    
+    .customer-input .form-control:focus {
+      border-color: var(--accent-color);
+      box-shadow: 0 0 0 2px rgba(255, 112, 67, 0.2);
+      outline: none;
+    }
+
+    .customer-section label {
+      margin: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="index.html" class="back-link"><span style="font-size: 1.2rem;">⬅️</span> Menu</a>
+    
+    <div class="customer-section">
+      <div class="form-group customer-input">
+        <label for="customer-name">Cliente:</label>
+        <input type="text" id="customer-name" class="form-control" required placeholder="Nome do cliente">
+      </div>
+      <div class="form-group time-selection">
+        <div class="time-selection-header">
+          <label>Entrega:</label>
+          <div class="meal-period-buttons">
+            <button type="button" class="time-btn asap-btn active" id="asap-btn">AGORA</button>
+            <button type="button" class="meal-btn" id="lunch-btn">Almoço</button>
+            <button type="button" class="meal-btn" id="dinner-btn">Jantar</button>
+          </div>
+        </div>
+        
+        <div class="time-picker-wrapper">
+          <div class="time-picker-label">Hora:</div>
+          <div class="time-picker-container">
+            <div class="time-group">
+              <div class="time-group-label">Hora:</div>
+              <div class="time-buttons-grid lunch-hours" style="display: none;">
+                <button type="button" class="time-btn hour-btn" data-hour="11">11h</button>
+                <button type="button" class="time-btn hour-btn" data-hour="12">12h</button>
+                <button type="button" class="time-btn hour-btn" data-hour="13">13h</button>
+                <button type="button" class="time-btn hour-btn" data-hour="14">14h</button>
+              </div>
+              <div class="time-buttons-grid dinner-hours" style="display: none;">
+                <button type="button" class="time-btn hour-btn" data-hour="18">18h</button>
+                <button type="button" class="time-btn hour-btn" data-hour="19">19h</button>
+                <button type="button" class="time-btn hour-btn" data-hour="20">20h</button>
+                <button type="button" class="time-btn hour-btn" data-hour="21">21h</button>
+              </div>
+            </div>
+            <div class="time-group">
+              <div class="time-group-label">Minutos:</div>
+              <div class="time-buttons-grid">
+                <button type="button" class="time-btn minute-btn" data-minute="0">00</button>
+                <button type="button" class="time-btn minute-btn" data-minute="10">10</button>
+                <button type="button" class="time-btn minute-btn" data-minute="15">15</button>
+                <button type="button" class="time-btn minute-btn" data-minute="20">20</button>
+                <button type="button" class="time-btn minute-btn" data-minute="30">30</button>
+                <button type="button" class="time-btn minute-btn" data-minute="40">40</button>
+                <button type="button" class="time-btn minute-btn" data-minute="45">45</button>
+                <button type="button" class="time-btn minute-btn" data-minute="50">50</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div id="time-display" class="time-display">AGORA</div>
+        <input type="hidden" id="scheduled-time" class="form-control">
+        <span id="current-time" class="time-indicator"></span>
+      </div>
+    </div>
+
+    <div class="categories">
+      <button class="category-btn" data-category="carne">Carne</button>
+      <button class="category-btn" data-category="acompanhamentos">Acompanhamentos</button>
+      <button class="category-btn" data-category="peixe">Peixe</button>
+      <button class="category-btn" data-category="refrigerantes">Refrigerantes</button>
+      <button class="category-btn" data-category="vinhos">Vinhos</button>
+    </div>
+
+    <div class="items-section">
+      <div class="items-grid" id="items-container"></div>
+      <div class="pagination" id="pagination"></div>
+    </div>
+
+    <div class="order-section">
+      <h2>Pedido Atual</h2>
+      <div class="cart-items" id="cart-items">
+        <!-- Cart items will be added here dynamically -->
+      </div>
+
+      <div class="total-section">
+        <div class="total-row">
+          <span>Total:</span>
+          <span class="total-amount" id="total-amount">0.00€</span>
+        </div>
+        <button class="send-order-btn" id="send-order-btn">Enviar Pedido</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Menu data from the menu.txt file
+    const menuData = {
+      carne: [
+        { name: "1 Frango do Churrasco", price: 7.90 },
+        { name: "1/2 Frango do Churrasco", price: 4.50 },
+        { name: "1/2 Frango do Churrasco *", price: 8.00, note: "30-40 min" },
+        { name: "1 Espetada Guia", price: 6.50 },
+        { name: "1 Espetada Frango c/ Bacon", price: 6.50 },
+        { name: "1 Dose Entrecosto", price: 8.00 },
+        { name: "1/2 Dose Entrecosto", price: 4.50 },
+        { name: "1 Salsicha Toscana", price: 2.00 },
+        { name: "1 Févera de Porco", price: 6.00 },
+        { name: "1 Costeleta Vitela", price: 25.00, priceType: "kg" },
+        { name: "1 Costeleta Porco", price: 6.00 },
+        { name: "1 Coelho*", price: 12.50, note: "30-40 min" },
+        { name: "Costelinha", price: 19.00, priceType: "kg" },
+        { name: "Picanha", price: 36.50, priceType: "kg" },
+        { name: "1 Bife do Frango", price: 6.00 },
+        { name: "Bife do Lombo", price: 40.00, priceType: "kg" }
+      ],
+      acompanhamentos: [
+        { name: "1 Dose Batata Frita", price: 3.75 },
+        { name: "1 Dose Batata Frita Barrosa", price: 2.50 },
+        { name: "1 Dose Arroz", price: 3.75 },
+        { name: "1/2 Dose Arroz", price: 2.50 },
+        { name: "1 Salada Mista", price: 4.00 },
+        { name: "1/2 Salada Mista", price: 2.75 },
+        { name: "1 Salada Tomate", price: 4.00 },
+        { name: "1 Salada Alface", price: 4.00 },
+        { name: "1 Dose Feijão Preto", price: 5.75 },
+        { name: "1/2 Dose Feijão Preto", price: 3.95 },
+        { name: "1 Esparregado Grelos", price: 5.50 },
+        { name: "1 Broa de Milho", price: 1.90 },
+        { name: "1/2 Broa de Milho", price: 1.00 },
+        { name: "1 Broa de Avintes", price: 3.50 },
+        { name: "1/2 Broa de Avintes", price: 2.00 },
+        { name: "1 Trança (Caceté)", price: 1.80 }
+      ],
+      peixe: [
+        { name: "Bacalhau (1 Pessoa)", price: 19.50, note: "40 min" },
+        { name: "Bacalhau (2 Pessoas)", price: 32.50, note: "40 min" }
+      ],
+      refrigerantes: [
+        { name: "Refrigerantes 1L", price: 2.75 },
+        { name: "Refrigerantes 1.5L", price: 3.00 }
+      ],
+      vinhos: [
+        { name: "Vinho Casa (B/T)", price: 4.00, note: "Verdes 0.75cl" },
+        { name: "V. Branco Muralhas", price: 7.00, note: "Verdes 0.75cl" },
+        { name: "V. Branco Casal Garcia", price: 7.00, note: "Verdes 0.75cl" },
+        { name: "V. Porta Ravessa (B/T)", price: 4.50, note: "Maduros 0.75cl" },
+        { name: "V. Gasificado Castiço", price: 5.50, note: "Maduros 0.75cl" },
+        { name: "V. Monte Velho Tinto", price: 7.00, note: "Maduros 0.75cl" },
+        { name: "V. Eugénio Almeida T", price: 7.00, note: "Maduros 0.75cl" }
+      ]
+    };
+
+    // DOM Elements
+    const categoriesButtons = document.querySelectorAll('.category-btn');
+    const itemsContainer = document.getElementById('items-container');
+    const paginationContainer = document.getElementById('pagination');
+    const cartItemsContainer = document.getElementById('cart-items');
+    const totalAmountElement = document.getElementById('total-amount');
+    const customerNameInput = document.getElementById('customer-name');
+    const scheduledTimeInput = document.getElementById('scheduled-time');
+    const timeDisplay = document.getElementById('time-display');
+    const asapButton = document.getElementById('asap-btn');
+    const lunchButton = document.getElementById('lunch-btn');
+    const dinnerButton = document.getElementById('dinner-btn');
+    const lunchHours = document.querySelector('.lunch-hours');
+    const dinnerHours = document.querySelector('.dinner-hours');
+    const hourButtons = document.querySelectorAll('.hour-btn');
+    const minuteButtons = document.querySelectorAll('.minute-btn');
+    const sendOrderButton = document.getElementById('send-order-btn');
+    const currentTimeEl = document.getElementById('current-time');
+
+    // Cart items and total
+    let cart = [];
+    let total = 0;
+    
+    // Pagination state
+    let currentCategory = '';
+    let currentPage = 0;
+    let itemsPerPage = 16; // 4x4 grid
+    
+    // Selected delivery time
+    let isAsap = true;
+    let selectedHour = null;
+    let selectedMinute = null;
+    let selectedMealPeriod = null; // 'lunch' or 'dinner'
+
+    // Initialize clock
+    function updateClock() {
+      const now = new Date();
+      currentTimeEl.textContent = now.toLocaleTimeString();
+    }
+    
+    updateClock();
+    setInterval(updateClock, 1000);
+
+    // Time selection handling
+    asapButton.addEventListener('click', function() {
+      isAsap = true;
+      asapButton.classList.add('active');
+      
+      // Reset hour and minute selections
+      resetTimeSelections();
+      
+      // Update display
+      scheduledTimeInput.value = '';
+      timeDisplay.textContent = 'AGORA';
+    });
+    
+    // Meal period selection
+    lunchButton.addEventListener('click', function() {
+      selectMealPeriod('lunch');
+    });
+    
+    dinnerButton.addEventListener('click', function() {
+      selectMealPeriod('dinner');
+    });
+    
+    function selectMealPeriod(period) {
+      // Deactivate ASAP button
+      isAsap = false;
+      asapButton.classList.remove('active');
+      
+      // Reset hour and minute selections
+      resetTimeSelections(true);
+      
+      // Update meal period buttons
+      selectedMealPeriod = period;
+      lunchButton.classList.toggle('active', period === 'lunch');
+      dinnerButton.classList.toggle('active', period === 'dinner');
+      
+      // Show appropriate hour buttons
+      lunchHours.style.display = period === 'lunch' ? 'grid' : 'none';
+      dinnerHours.style.display = period === 'dinner' ? 'grid' : 'none';
+      
+      // If no hour is selected, select first hour in the period
+      if (!selectedHour) {
+        const firstHourBtn = period === 'lunch' 
+          ? lunchHours.querySelector('.hour-btn') 
+          : dinnerHours.querySelector('.hour-btn');
+        
+        if (firstHourBtn) {
+          firstHourBtn.click();
+        }
+      }
+    }
+    
+    function resetTimeSelections(keepMealPeriod = false) {
+      hourButtons.forEach(btn => btn.classList.remove('active'));
+      minuteButtons.forEach(btn => btn.classList.remove('active'));
+      
+      selectedHour = null;
+      selectedMinute = null;
+      
+      if (!keepMealPeriod) {
+        selectedMealPeriod = null;
+        lunchButton.classList.remove('active');
+        dinnerButton.classList.remove('active');
+        lunchHours.style.display = 'none';
+        dinnerHours.style.display = 'none';
+      }
+    }
+    
+    // Hour selection
+    hourButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        isAsap = false;
+        asapButton.classList.remove('active');
+        
+        // Clear other hour selections
+        hourButtons.forEach(btn => btn.classList.remove('active'));
+        
+        // Add active class to clicked button
+        this.classList.add('active');
+        
+        // Update selected hour
+        selectedHour = parseInt(this.getAttribute('data-hour'), 10);
+        
+        // Set default minute to 00 if none selected
+        if (selectedMinute === null) {
+          selectedMinute = 0;
+          minuteButtons[0].classList.add('active');
+        }
+        
+        updateTimeDisplay();
+      });
+    });
+    
+    // Minute selection
+    minuteButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        isAsap = false;
+        asapButton.classList.remove('active');
+        
+        // Clear other minute selections
+        minuteButtons.forEach(btn => btn.classList.remove('active'));
+        
+        // Add active class to clicked button
+        this.classList.add('active');
+        
+        // Update selected minute
+        selectedMinute = parseInt(this.getAttribute('data-minute'), 10);
+        
+        // If no meal period is selected, choose based on current time
+        if (!selectedMealPeriod) {
+          const now = new Date();
+          const currentHour = now.getHours();
+          
+          // Before 3pm is lunch, after is dinner
+          if (currentHour < 15) {
+            selectMealPeriod('lunch');
+          } else {
+            selectMealPeriod('dinner');
+          }
+        }
+        
+        // If no hour is selected, select appropriate hour
+        if (selectedHour === null) {
+          const hourButtons = selectedMealPeriod === 'lunch' 
+            ? lunchHours.querySelectorAll('.hour-btn')
+            : dinnerHours.querySelectorAll('.hour-btn');
+            
+          const now = new Date();
+          const currentHour = now.getHours();
+          
+          // Try to find a button that matches current hour or closest next available
+          let bestHourBtn = hourButtons[0]; // Default to first button
+          let bestHourDiff = 24; // Initialize with max possible difference
+          
+          hourButtons.forEach(btn => {
+            const btnHour = parseInt(btn.getAttribute('data-hour'), 10);
+            const hourDiff = btnHour >= currentHour ? btnHour - currentHour : 24 + btnHour - currentHour;
+            
+            if (hourDiff < bestHourDiff) {
+              bestHourBtn = btn;
+              bestHourDiff = hourDiff;
+            }
+          });
+          
+          if (bestHourBtn) {
+            bestHourBtn.click();
+          }
+        }
+        
+        updateTimeDisplay();
+      });
+    });
+    
+    // Update time display based on selections
+    function updateTimeDisplay() {
+      if (isAsap) {
+        timeDisplay.textContent = 'AGORA';
+        scheduledTimeInput.value = '';
+      } else if (selectedHour !== null) {
+        const minuteStr = selectedMinute !== null ? 
+          `:${selectedMinute.toString().padStart(2, '0')}` : 
+          ':00';
+        
+        timeDisplay.textContent = `${selectedHour}${minuteStr}`;
+        
+        // Create date for the backend
+        const now = new Date();
+        const orderDate = new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate(),
+          selectedHour,
+          selectedMinute !== null ? selectedMinute : 0
+        );
+        
+        // If the time is in the past, assume it's for tomorrow
+        if (orderDate < now) {
+          orderDate.setDate(orderDate.getDate() + 1);
+        }
+        
+        scheduledTimeInput.value = formatDateTimeForBackend(orderDate);
+      }
+    }
+
+    // Format date for backend
+    function formatDateTimeForBackend(date) {
+      const year = date.getFullYear();
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const day = date.getDate().toString().padStart(2, '0');
+      const hours = date.getHours().toString().padStart(2, '0');
+      const minutes = date.getMinutes().toString().padStart(2, '0');
+      
+      return `${year}-${month}-${day}T${hours}:${minutes}`;
+    }
+
+    // Add event listeners to category buttons
+    categoriesButtons.forEach(button => {
+      button.addEventListener('click', function() {
+        // Remove active class from all category buttons
+        categoriesButtons.forEach(btn => btn.classList.remove('active'));
+        
+        // Add active class to clicked button
+        this.classList.add('active');
+        
+        // Display items for the selected category
+        const category = this.getAttribute('data-category');
+        currentCategory = category;
+        currentPage = 0;
+        displayItems(category, currentPage);
+      });
+    });
+
+    // Display items for a category
+    function displayItems(category, page = 0) {
+      itemsContainer.innerHTML = '';
+      
+      if (!menuData[category]) {
+        return;
+      }
+      
+      // Calculate pagination
+      const totalItems = menuData[category].length;
+      const totalPages = Math.ceil(totalItems / itemsPerPage);
+      const startIdx = page * itemsPerPage;
+      const endIdx = Math.min(startIdx + itemsPerPage, totalItems);
+      
+      // Display current page items
+      for (let i = startIdx; i < endIdx; i++) {
+        const item = menuData[category][i];
+        
+        const itemButton = document.createElement('button');
+        itemButton.className = 'item-btn';
+        
+        const priceText = item.priceType === 'kg' ? `${item.price.toFixed(2)}€/kg` : `${item.price.toFixed(2)}€`;
+        
+        let noteHtml = '';
+        if (item.note) {
+          noteHtml = `<div class="item-note">${item.note}</div>`;
+        }
+        
+        itemButton.innerHTML = `
+          <div class="item-name">${item.name}</div>
+          ${noteHtml}
+          <div class="item-price">${priceText}</div>
+        `;
+        
+        itemButton.addEventListener('click', () => {
+          addToCart(item);
+        });
+        
+        itemsContainer.appendChild(itemButton);
+      }
+      
+      // Update pagination controls
+      updatePagination(totalPages, page);
+    }
+    
+    // Update pagination controls
+    function updatePagination(totalPages, currentPage) {
+      paginationContainer.innerHTML = '';
+      
+      if (totalPages <= 1) {
+        return; // No pagination needed
+      }
+      
+      for (let i = 0; i < totalPages; i++) {
+        const pageButton = document.createElement('button');
+        pageButton.className = `page-btn ${i === currentPage ? 'active' : ''}`;
+        pageButton.textContent = i + 1;
+        
+        pageButton.addEventListener('click', () => {
+          currentPage = i;
+          displayItems(currentCategory, currentPage);
+        });
+        
+        paginationContainer.appendChild(pageButton);
+      }
+    }
+
+    // Add item to cart
+    function addToCart(item) {
+      // Check if item is already in the cart
+      const existingItemIndex = cart.findIndex(cartItem => cartItem.name === item.name);
+      
+      if (existingItemIndex !== -1) {
+        // Increment quantity if item already exists
+        cart[existingItemIndex].quantity += 1;
+      } else {
+        // Add new item to cart
+        cart.push({
+          name: item.name,
+          price: item.price,
+          priceType: item.priceType,
+          quantity: 1,
+          note: item.note || ''
+        });
+      }
+      
+      // Update the cart display
+      updateCartDisplay();
+    }
+
+    // Update cart display
+    function updateCartDisplay() {
+      cartItemsContainer.innerHTML = '';
+      total = 0;
+      
+      if (cart.length === 0) {
+        cartItemsContainer.innerHTML = '<p style="text-align: center; padding: 15px; color: var(--text-secondary);">Nenhum item adicionado</p>';
+        totalAmountElement.textContent = '0.00€';
+        return;
+      }
+      
+      cart.forEach((item, index) => {
+        const itemTotal = item.priceType === 'kg' ? 0 : (item.price * item.quantity);
+        total += itemTotal;
+        
+        const cartItem = document.createElement('div');
+        cartItem.className = 'cart-item';
+        
+        const priceText = item.priceType === 'kg' ? `${item.price.toFixed(2)}€/kg` : `${item.price.toFixed(2)}€`;
+        const itemTotalText = item.priceType === 'kg' ? 'Peso?' : `${itemTotal.toFixed(2)}€`;
+        
+        cartItem.innerHTML = `
+          <div class="item-info">
+            <div><strong>${item.name}</strong></div>
+            <div>${priceText} x ${item.quantity} = ${itemTotalText}</div>
+          </div>
+          <div class="quantity-controls">
+            <button class="quantity-btn decrease">-</button>
+            <span class="quantity">${item.quantity}</span>
+            <button class="quantity-btn increase">+</button>
+          </div>
+        `;
+        
+        // Decrease quantity
+        cartItem.querySelector('.decrease').addEventListener('click', () => {
+          if (item.quantity > 1) {
+            item.quantity -= 1;
+          } else {
+            cart.splice(index, 1);
+          }
+          updateCartDisplay();
+        });
+        
+        // Increase quantity
+        cartItem.querySelector('.increase').addEventListener('click', () => {
+          item.quantity += 1;
+          updateCartDisplay();
+        });
+        
+        cartItemsContainer.appendChild(cartItem);
+      });
+      
+      totalAmountElement.textContent = `${total.toFixed(2)}€`;
+    }
+
+    // Send order to backend
+    sendOrderButton.addEventListener('click', async () => {
+      const customerName = customerNameInput.value.trim();
+      const scheduledTime = scheduledTimeInput.value;
+      
+      if (!customerName) {
+        showNotification('Por favor, insira o nome do cliente', 'error');
+        return;
+      }
+      
+      if (cart.length === 0) {
+        showNotification('Por favor, adicione itens ao pedido', 'error');
+        return;
+      }
+      
+      try {
+        // Prepare order data
+        const orderData = {
+          order: {
+            customer: customerName,
+            source: 'phone',
+            status: 'pending',
+            scheduled_at: scheduledTime || null
+          },
+          items: cart.map(item => ({
+            item_name: item.name,
+            quantity: item.quantity,
+            station: getStationForItem(item.name),
+            preparation_time_minutes: getEstimatedPrepTime(item.name),
+            item_status: 'pending'
+          }))
+        };
+        
+        // Send order to backend
+        const response = await fetch('http://localhost:3000/orders', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(orderData)
+        });
+        
+        if (!response.ok) {
+          throw new Error('Falha ao enviar o pedido');
+        }
+        
+        showNotification('Pedido enviado com sucesso!', 'success');
+        
+        // Reset form and cart
+        customerNameInput.value = '';
+        scheduledTimeInput.value = '';
+        cart = [];
+        updateCartDisplay();
+        
+        // Focus back on customer name for next order
+        customerNameInput.focus();
+        
+      } catch (error) {
+        showNotification('Erro: ' + error.message, 'error');
+      }
+    });
+
+    // Helper function to determine station for an item
+    function getStationForItem(itemName) {
+      itemName = itemName.toLowerCase();
+      
+      if (itemName.includes('frango') || itemName.includes('espetada') || 
+          itemName.includes('entrecosto') || itemName.includes('salsicha') ||
+          itemName.includes('févera') || itemName.includes('costeleta') ||
+          itemName.includes('coelho') || itemName.includes('costelinha') ||
+          itemName.includes('picanha') || itemName.includes('bife')) {
+        return 'churrasco';
+      } else if (itemName.includes('batata') || itemName.includes('arroz') ||
+                itemName.includes('salada') || itemName.includes('feijão') ||
+                itemName.includes('esparregado') || itemName.includes('broa') ||
+                itemName.includes('trança')) {
+        return 'cozinha';
+      } else if (itemName.includes('bacalhau')) {
+        return 'grelha';
+      } else {
+        return 'bar';
+      }
+    }
+
+    // Helper function to estimate prep time
+    function getEstimatedPrepTime(itemName) {
+      if (itemName.includes('*') || itemName.includes('min')) {
+        if (itemName.toLowerCase().includes('coelho') || 
+            itemName.toLowerCase().includes('frango') || 
+            itemName.toLowerCase().includes('30-40')) {
+          return 40;
+        } else if (itemName.toLowerCase().includes('bacalhau') ||
+                  itemName.toLowerCase().includes('40 min')) {
+          return 40;
+        }
+      }
+      
+      if (itemName.toLowerCase().includes('frango') || 
+          itemName.toLowerCase().includes('espetada')) {
+        return 15;
+      } else if (itemName.toLowerCase().includes('entrecosto') ||
+                itemName.toLowerCase().includes('costeleta')) {
+        return 20;
+      } else if (itemName.toLowerCase().includes('batata') || 
+                itemName.toLowerCase().includes('arroz')) {
+        return 10;
+      } else {
+        return 5;
+      }
+    }
+
+    // Show notification
+    function showNotification(message, type) {
+      const notification = document.createElement('div');
+      notification.className = `notification notification-${type}`;
+      notification.textContent = message;
+      
+      document.body.appendChild(notification);
+      
+      // Remove after 3 seconds
+      setTimeout(() => {
+        notification.remove();
+      }, 3000);
+    }
+
+    // Add keyboard shortcuts for faster navigation
+    document.addEventListener('keydown', (e) => {
+      // Number keys 1-5 for category selection
+      if (e.key >= '1' && e.key <= '5') {
+        const categoryIndex = parseInt(e.key) - 1;
+        if (categoryIndex < categoriesButtons.length) {
+          categoriesButtons[categoryIndex].click();
+        }
+      }
+      
+      // Enter key to submit order when customer name is focused
+      if (e.key === 'Enter' && (document.activeElement === customerNameInput || 
+                                document.activeElement === scheduledTimeInput) && 
+          cart.length > 0) {
+        sendOrderButton.click();
+      }
+    });
+
+    // Set initial active category
+    categoriesButtons[0].click();
+    
+    // Focus customer name input on load for immediate entry
+    customerNameInput.focus();
+  </script>
+</body>
+</html> 

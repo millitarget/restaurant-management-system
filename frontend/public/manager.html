@@ -1,0 +1,1153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Manager</title>
+  <link rel="stylesheet" href="styles.css">
+  <!-- Supabase JS library -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-client.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .nav-header {
+      color: white;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .phone-order-btn {
+      background-color: #FF5722;
+      color: white;
+      text-decoration: none;
+      padding: 8px 15px;
+      border-radius: 4px;
+      font-weight: 500;
+      transition: background-color 0.3s;
+    }
+
+    .phone-order-btn:hover {
+      background-color: #E64A19;
+    }
+
+    .manager {
+      background-color: #673AB7;
+    }
+
+    .nav-items {
+      display: flex;
+      justify-content: space-around;
+      margin-bottom: 20px;
+    }
+
+    .nav-tab {
+      flex: 1;
+      background-color: #f1f1f1;
+      padding: 10px 15px;
+      text-align: center;
+      border-radius: 4px;
+      margin: 0 5px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .nav-tab.active {
+      background-color: #2196F3;
+      color: white;
+    }
+
+    .tab-content {
+      display: none;
+      overflow-y: visible;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    #order-form {
+      background-color: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+
+    h1, h2, h3 {
+      color: #333;
+    }
+
+    .form-group {
+      margin-bottom: 15px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+
+    .items-container {
+      margin-top: 20px;
+    }
+
+    .item-row {
+      display: grid;
+      grid-template-columns: 3fr 1fr 1fr 1fr 1fr 80px;
+      gap: 10px;
+      margin-bottom: 10px;
+      align-items: center;
+    }
+
+    .item-header {
+      font-weight: bold;
+      padding: 8px 0;
+      border-bottom: 2px solid #eee;
+    }
+
+    .btn-add-item {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 8px 16px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-top: 10px;
+    }
+
+    .btn-remove-item {
+      background-color: #f44336;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 5px 10px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .btn-save {
+      background-color: #2196F3;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 10px 20px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 20px;
+    }
+    
+    .btn-cancel {
+      background-color: #f44336;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 10px 20px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    
+    .btn-edit {
+      background-color: #FF9800;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 5px 10px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-top: 5px;
+    }
+
+    .time-slots-wrapper {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .time-slot {
+      margin-bottom: 20px;
+    }
+
+    .time-slot-header {
+      display: none;
+    }
+
+    .orders-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      background-color: white;
+      border-radius: 0 0 4px 4px;
+      padding: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .order-card {
+      border-left: 3px solid #2196F3;
+      background-color: #f9f9f9;
+      padding: 10px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      overflow: hidden;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+    }
+
+    .order-card:hover {
+      background-color: #f0f0f0;
+    }
+
+    .order-time {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--primary-color);
+      background-color: #ECEFF1;
+      padding: 4px 8px;
+      border-radius: 4px;
+      margin-right: 12px;
+      min-width: 60px;
+      text-align: center;
+    }
+
+    .order-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-grow: 1;
+    }
+
+    .order-info {
+      font-weight: 500;
+      color: var(--primary-dark);
+    }
+    
+    .order-source {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+    
+    .order-status-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .order-actions {
+      display: flex;
+      gap: 5px;
+    }
+    
+    .btn-edit, .btn-complete, .btn-delete {
+      padding: 4px 8px;
+      border: none;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      color: white;
+    }
+    
+    .btn-edit {
+      background-color: #FF9800;
+    }
+    
+    .btn-complete {
+      background-color: #4CAF50;
+    }
+    
+    .btn-delete {
+      background-color: #f44336;
+    }
+
+    .order-items-list {
+      display: none;
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px dashed #ddd;
+      font-size: 0.9rem;
+    }
+    
+    .order-card.expanded .order-items-list {
+      display: block;
+    }
+
+    .order-summary {
+      font-size: 14px;
+      margin-top: 5px;
+      color: #666;
+    }
+
+    .order-details {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease, padding 0.3s ease;
+      padding: 0;
+      margin-top: 0;
+    }
+
+    .order-card.expanded .order-details {
+      max-height: 500px;
+      padding-top: 10px;
+      margin-top: 10px;
+      border-top: 1px solid #eee;
+    }
+
+    .order-status {
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    .status-pending {
+      background-color: #FFC107;
+      color: #333;
+    }
+
+    .status-in-progress {
+      background-color: #2196F3;
+      color: white;
+    }
+
+    .status-done {
+      background-color: #4CAF50;
+      color: white;
+    }
+
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 15px 20px;
+      border-radius: 4px;
+      color: white;
+      font-weight: bold;
+      z-index: 1000;
+      animation: fadeIn 0.3s, fadeOut 0.3s 2.7s;
+      max-width: 300px;
+    }
+
+    .notification-success {
+      background-color: #4CAF50;
+    }
+
+    .notification-error {
+      background-color: #f44336;
+    }
+
+    .notification-warning {
+      background-color: #FF9800;
+    }
+
+    /* Station modules section */
+    .station-modules {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .station-module {
+      flex: 1;
+      min-width: 200px;
+      background-color: white;
+      border-radius: 8px;
+      padding: 15px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      text-align: center;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .station-module:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 16px rgba(0,0,0,0.15);
+    }
+
+    .station-icon {
+      font-size: 36px;
+      margin-bottom: 10px;
+      color: #673AB7;
+    }
+
+    .station-title {
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #333;
+    }
+
+    .station-description {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 15px;
+    }
+
+    .station-link {
+      display: inline-block;
+      background-color: #FF5722;
+      color: white;
+      text-decoration: none;
+      padding: 8px 15px;
+      border-radius: 4px;
+      font-weight: 500;
+      transition: background-color 0.3s;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    .station-link:hover {
+      background-color: #E64A19;
+    }
+
+    .phone-station {
+      border-top: 4px solid #FF5722;
+    }
+
+    @keyframes fadeIn {
+      from {opacity: 0;}
+      to {opacity: 1;}
+    }
+
+    @keyframes fadeOut {
+      from {opacity: 1;}
+      to {opacity: 0;}
+    }
+
+    /* Custom styles to fix scrolling */
+    html, body {
+      height: 100%;
+      overflow-y: auto !important;
+    }
+
+    body.apple-manager {
+      min-height: 100%;
+      overflow-y: auto !important;
+    }
+  </style>
+</head>
+<body class="apple-manager apple-design">
+  <div class="container">
+      <div class="nav-header manager">
+      <h1 class="nav-title">Restaurant Manager</h1>
+      <div class="nav-actions">
+        <div id="current-time"></div>
+      </div>
+      </div>
+      
+      <div class="nav-items">
+      <div class="nav-tab active" data-tab="create-order">Create Order</div>
+      <div class="nav-tab" data-tab="pending-orders">Pending Orders</div>
+      <div class="nav-tab" data-tab="completed-orders">Completed Orders</div>
+      </div>
+
+    <!-- Tab content for creating orders -->
+    <div id="create-order" class="tab-content active">
+      <form id="order-form">
+          <div class="form-group">
+          <label for="customer-name">Customer Name</label>
+          <input type="text" id="customer-name" class="form-control" required>
+          </div>
+
+          <div class="form-group">
+          <label for="order-source">Order Source</label>
+          <select id="order-source" class="form-control" required>
+            <option value="">Select Source</option>
+            <option value="in-store">In-Store</option>
+              <option value="phone">Phone</option>
+              <option value="online">Online</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+          <label for="scheduled-time">Scheduled Time (Leave blank for immediate preparation)</label>
+            <input type="datetime-local" id="scheduled-time" class="form-control">
+          </div>
+
+          <div class="items-container">
+            <h3>Order Items</h3>
+            
+            <div class="item-row item-header">
+              <div>Item Name</div>
+              <div>Quantity</div>
+              <div>Station</div>
+            <div>Prep Time (min)</div>
+              <div>Status</div>
+            <div></div>
+            </div>
+            
+            <div id="items-list">
+              <!-- Items will be added here dynamically -->
+            </div>
+            
+          <button type="button" id="add-item" class="btn-add-item">Add Item</button>
+          </div>
+          
+          <div class="form-actions">
+          <button type="button" id="cancel-order" class="btn-cancel">Cancel</button>
+          <button type="submit" id="save-order" class="btn-save">Save Order</button>
+          </div>
+      </form>
+      </div>
+      
+    <!-- Tab content for pending orders -->
+    <div id="pending-orders" class="tab-content">
+      <div class="time-slots-wrapper" id="pending-orders-list">
+        <!-- Pending orders will be loaded here -->
+        </div>
+      </div>
+      
+    <!-- Tab content for completed orders -->
+    <div id="completed-orders" class="tab-content">
+      <div class="time-slots-wrapper" id="completed-orders-list">
+        <!-- Completed orders will be loaded here -->
+        </div>
+      </div>
+  </div>
+  
+  <!-- Item row template -->
+  <template id="item-template">
+    <div class="item-row animate-new">
+      <input type="text" class="form-control item-name" placeholder="Item name" required>
+      <input type="number" class="form-control item-quantity" min="1" value="1" required>
+      <select class="form-control item-station" required>
+        <option value="">Select Station</option>
+        <option value="grill">Grill</option>
+        <option value="fries">Fries</option>
+        <option value="kitchen">Kitchen</option>
+        <option value="assembly">Assembly</option>
+      </select>
+      <input type="number" class="form-control item-prep-time" min="1" value="5" required>
+      <select class="form-control item-status">
+        <option value="pending">Pending</option>
+        <option value="ready-to-start">Ready to Start</option>
+        <option value="in-progress">In Progress</option>
+        <option value="done">Done</option>
+      </select>
+      <button type="button" class="btn-remove-item">Remove</button>
+    </div>
+  </template>
+
+  <!-- Order card template -->
+  <template id="order-card-template">
+    <div class="order-card">
+      <div class="order-header">
+        <div class="order-info">
+          <span class="order-id"></span>
+          <span class="customer-name"></span>
+          <span class="order-source"></span>
+        </div>
+        <div class="order-status-actions">
+          <span class="order-status"></span>
+          <div class="order-actions">
+            <button class="btn-edit">Edit</button>
+            <button class="btn-complete">Complete</button>
+            <button class="btn-delete">Delete</button>
+          </div>
+        </div>
+      </div>
+      <div class="order-items-list">
+        <!-- Items will be added here -->
+      </div>
+    </div>
+  </template>
+
+  <!-- Edit order modal would go here if needed -->
+  
+  <script>
+    // DOM Elements
+    const customerNameInput = document.getElementById('customer-name');
+    const orderSourceSelect = document.getElementById('order-source');
+    const scheduledTimeInput = document.getElementById('scheduled-time');
+    const orderForm = document.getElementById('order-form');
+    const itemsList = document.getElementById('items-list');
+    const addItemButton = document.getElementById('add-item');
+    const saveOrderButton = document.getElementById('save-order');
+    const cancelOrderButton = document.getElementById('cancel-order');
+    const pendingOrdersList = document.getElementById('pending-orders-list');
+    const completedOrdersList = document.getElementById('completed-orders-list');
+    const itemTemplate = document.getElementById('item-template');
+    const orderCardTemplate = document.getElementById('order-card-template');
+    const navTabs = document.querySelectorAll('.nav-tab');
+    const tabContents = document.querySelectorAll('.tab-content');
+    const currentTimeEl = document.getElementById('current-time');
+    
+    // Current order being edited
+    let currentOrderId = null;
+    
+    // Initialize clock
+    function updateClock() {
+      const now = new Date();
+      currentTimeEl.textContent = now.toLocaleTimeString();
+    }
+    
+    updateClock();
+    setInterval(updateClock, 1000);
+    
+    // Tab switching functionality
+    navTabs.forEach(tab => {
+      tab.addEventListener('click', function() {
+        // Remove active class from all tabs
+        navTabs.forEach(t => t.classList.remove('active'));
+        tabContents.forEach(c => c.classList.remove('active'));
+        
+        // Add active class to clicked tab
+        this.classList.add('active');
+        
+        // Show corresponding content
+        const tabId = this.getAttribute('data-tab');
+        document.getElementById(tabId).classList.add('active');
+        
+        // Always refresh data when switching tabs
+        if (tabId === 'pending-orders') {
+          loadPendingOrders();
+        } else if (tabId === 'completed-orders') {
+          loadCompletedOrders();
+        }
+      });
+    });
+    
+    // Add item functionality
+    function addItemRow(item = {}) {
+      const newItem = document.importNode(itemTemplate.content, true);
+      const itemRow = newItem.querySelector('.item-row');
+      
+      // Set values if item is provided
+      if (item.id) {
+        itemRow.dataset.itemId = item.id;
+      }
+      
+      if (item.item_name) {
+        newItem.querySelector('.item-name').value = item.item_name;
+      }
+      
+      if (item.quantity) {
+        newItem.querySelector('.item-quantity').value = item.quantity;
+      }
+      
+      if (item.station) {
+        newItem.querySelector('.item-station').value = item.station;
+      }
+      
+      if (item.preparation_time_minutes) {
+        newItem.querySelector('.item-prep-time').value = item.preparation_time_minutes;
+      }
+      
+      if (item.item_status) {
+        newItem.querySelector('.item-status').value = item.item_status;
+      }
+      
+      // Add remove button functionality
+      newItem.querySelector('.btn-remove-item').addEventListener('click', function() {
+        itemRow.remove();
+      });
+      
+      itemsList.appendChild(newItem);
+      return itemRow;
+    }
+    
+    // Add item button click
+    addItemButton.addEventListener('click', function() {
+      addItemRow();
+    });
+    
+    // Cancel order button
+    cancelOrderButton.addEventListener('click', function() {
+      resetForm();
+      
+      // If we're editing, go back to orders tab
+      if (currentOrderId) {
+        currentOrderId = null;
+        document.querySelector('[data-tab="pending-orders"]').click();
+      }
+    });
+    
+    // Save order form submission
+    orderForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      try {
+        // Get form data
+        const orderData = {
+          customer: customerNameInput.value,
+          source: orderSourceSelect.value,
+          status: 'pending',
+          scheduled_at: scheduledTimeInput.value || null
+        };
+        
+        // Get items data
+        const itemsData = [];
+        const itemRows = itemsList.querySelectorAll('.item-row');
+        
+        let hasValidItems = false;
+        
+        itemRows.forEach(row => {
+          const itemName = row.querySelector('.item-name').value;
+          
+          if (itemName.trim()) {
+            hasValidItems = true;
+            const item = {
+              item_name: itemName,
+              quantity: parseInt(row.querySelector('.item-quantity').value) || 1,
+              station: row.querySelector('.item-station').value,
+              preparation_time_minutes: parseInt(row.querySelector('.item-prep-time').value) || 5,
+              item_status: row.querySelector('.item-status').value || 'pending'
+            };
+            
+            // Include ID if it exists (for updates)
+            if (row.dataset.itemId) {
+              item.id = row.dataset.itemId;
+            }
+            
+            itemsData.push(item);
+          }
+        });
+        
+        if (!hasValidItems) {
+          showNotification('Please add at least one item with a name', 'error');
+          return;
+        }
+        
+        // Determine if creating new or updating existing order
+        const isUpdating = !!currentOrderId;
+        const url = isUpdating ? 
+          `http://localhost:3000/orders/${currentOrderId}` : 
+          'http://localhost:3000/orders';
+        
+        const method = isUpdating ? 'PUT' : 'POST';
+        
+        // Send request
+        const response = await fetch(url, {
+          method: method,
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            order: orderData,
+            items: itemsData
+          })
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || 'Failed to save order');
+        }
+        
+        const result = await response.json();
+        
+        showNotification(
+          isUpdating ? 'Order updated successfully' : 'Order created successfully', 
+          'success'
+        );
+        
+        // Reset form
+        resetForm();
+        
+        // Navigate to pending orders tab
+        document.querySelector('[data-tab="pending-orders"]').click();
+        
+      } catch (error) {
+        showNotification('Error: ' + error.message, 'error');
+      }
+    });
+    
+    // Reset form
+    function resetForm() {
+      customerNameInput.value = '';
+      orderSourceSelect.value = '';
+      scheduledTimeInput.value = '';
+      itemsList.innerHTML = '';
+      currentOrderId = null;
+      
+      // Add one empty item row
+      addItemRow();
+    }
+    
+    // Load pending orders
+    async function loadPendingOrders() {
+      try {
+        pendingOrdersList.innerHTML = '<div class="loading">Loading orders...</div>';
+        
+        const response = await fetch('http://localhost:3000/orders?status=pending,in_progress');
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch pending orders');
+        }
+        
+        const orders = await response.json();
+        
+        // Filter to make sure we only get pending or in_progress orders
+        const pendingOrders = orders.filter(order => 
+          order.status === 'pending' || order.status === 'in_progress'
+        );
+        
+        // Sort orders by scheduled time
+        pendingOrders.sort((a, b) => {
+          // First, handle the case where there's no scheduled time
+          if (!a.scheduled_at && !b.scheduled_at) return 0;
+          if (!a.scheduled_at) return -1; // ASAP orders first
+          if (!b.scheduled_at) return 1;
+          
+          // Otherwise sort by scheduled time
+          return new Date(a.scheduled_at) - new Date(b.scheduled_at);
+        });
+        
+        pendingOrdersList.innerHTML = '';
+        
+        if (pendingOrders.length === 0) {
+          pendingOrdersList.innerHTML = '<div class="empty-message">No pending orders</div>';
+          return;
+        }
+        
+        // Create container for pending orders
+        const pendingContainer = document.createElement('div');
+        pendingContainer.className = 'pending-orders-container';
+        
+        // Add orders directly to the container
+        pendingOrders.forEach(order => {
+          const orderCard = createOrderCard(order);
+          pendingContainer.appendChild(orderCard);
+        });
+        
+        pendingOrdersList.appendChild(pendingContainer);
+        
+      } catch (error) {
+        showNotification('Error loading orders: ' + error.message, 'error');
+        pendingOrdersList.innerHTML = '<div class="error-message">Failed to load orders</div>';
+      }
+    }
+    
+    // Load completed orders
+    async function loadCompletedOrders() {
+      try {
+        completedOrdersList.innerHTML = '<div class="loading">Loading orders...</div>';
+        
+        // Try to load completed orders with retries
+        let orders = [];
+        let attempts = 0;
+        const maxAttempts = 3;
+        
+        while (attempts < maxAttempts) {
+          attempts++;
+          
+          // Try to get specifically done orders
+          const response = await fetch('http://localhost:3000/orders?status=done');
+          
+        if (!response.ok) {
+            throw new Error('Failed to fetch completed orders');
+          }
+          
+          orders = await response.json();
+          
+          // Filter to make sure we only get done orders
+          const completedOrders = orders.filter(order => order.status === 'done');
+          
+          if (completedOrders.length > 0) {
+            // We found some completed orders, display them
+            displayCompletedOrders(completedOrders);
+            return; // Exit the function
+          }
+          
+          // If no completed orders yet and we have more attempts, wait and try again
+          if (attempts < maxAttempts) {
+            await new Promise(resolve => setTimeout(resolve, 500));
+          }
+        }
+        
+        // If we've made all attempts and still no done orders, try getting all orders
+        const allResponse = await fetch('http://localhost:3000/orders');
+        if (!allResponse.ok) {
+          throw new Error('Failed to fetch all orders');
+        }
+        
+        const allOrders = await allResponse.json();
+        const completedOrders = allOrders.filter(order => order.status === 'done');
+        
+        displayCompletedOrders(completedOrders);
+        
+      } catch (error) {
+        showNotification('Error loading orders: ' + error.message, 'error');
+        completedOrdersList.innerHTML = '<div class="error-message">Failed to load orders</div>';
+      }
+    }
+    
+    // Helper function to display completed orders
+    function displayCompletedOrders(completedOrders) {
+      completedOrdersList.innerHTML = '';
+      
+      if (completedOrders.length === 0) {
+        completedOrdersList.innerHTML = '<div class="empty-message">No completed orders</div>';
+        return;
+      }
+      
+      // Sort completed orders by scheduled time
+      completedOrders.sort((a, b) => {
+        // First, handle the case where there's no scheduled time
+        if (!a.scheduled_at && !b.scheduled_at) return 0;
+        if (!a.scheduled_at) return -1;
+        if (!b.scheduled_at) return 1;
+        
+        // Otherwise sort by scheduled time
+        return new Date(a.scheduled_at) - new Date(b.scheduled_at);
+      });
+      
+      // Create container for completed orders
+      const completedContainer = document.createElement('div');
+      completedContainer.className = 'completed-orders-container';
+      
+      // Add orders directly to the container
+      completedOrders.forEach(order => {
+        const orderCard = createOrderCard(order);
+        completedContainer.appendChild(orderCard);
+      });
+      
+      completedOrdersList.appendChild(completedContainer);
+    }
+    
+    // Create order card
+    function createOrderCard(order) {
+      const cardClone = document.importNode(orderCardTemplate.content, true);
+      const orderCard = cardClone.querySelector('.order-card');
+      
+      orderCard.dataset.orderId = order.id;
+      
+      // Create time element
+      const orderTime = document.createElement('div');
+      orderTime.className = 'order-time';
+      
+      // Format the time
+      if (order.scheduled_at) {
+        const scheduledTime = new Date(order.scheduled_at);
+        orderTime.textContent = scheduledTime.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+      } else {
+        orderTime.textContent = 'ASAP';
+      }
+      
+      // Insert time element at the beginning of the card
+      orderCard.insertBefore(orderTime, orderCard.firstChild);
+      
+      // Set customer name (without #)
+      orderCard.querySelector('.order-id').textContent = '';
+      orderCard.querySelector('.customer-name').textContent = order.customer;
+      orderCard.querySelector('.order-source').textContent = ` (${order.source})`;
+      
+      // Add items
+      const itemsList = orderCard.querySelector('.order-items-list');
+      if (order.items && order.items.length > 0) {
+        const itemsHtml = order.items.map(item => {
+          return `<div class="order-item">
+            <span class="item-quantity">${item.quantity}x</span>
+            <span class="item-name">${item.item_name}</span>
+            <span class="item-station">${item.station}</span>
+            <span class="item-status ${item.item_status}">${item.item_status}</span>
+          </div>`;
+        }).join('');
+        
+        itemsList.innerHTML = itemsHtml;
+      } else {
+        itemsList.innerHTML = '<div class="empty-items">No items</div>';
+      }
+      
+      // Make card expandable when clicked
+      orderCard.addEventListener('click', function(e) {
+        if (!e.target.closest('button')) {
+          this.classList.toggle('expanded');
+        }
+      });
+      
+      // Add edit button functionality
+      orderCard.querySelector('.btn-edit').addEventListener('click', (e) => {
+        e.stopPropagation();
+        loadOrderForEdit(order.id);
+      });
+      
+      // Hide or show complete button based on order status
+      const completeButton = orderCard.querySelector('.btn-complete');
+      if (order.status === 'done') {
+        completeButton.style.display = 'none';
+      } else {
+        completeButton.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          try {
+            // Simplify the updated order object to only include what's needed
+            const updatedOrder = {
+              id: order.id,
+              status: 'done'
+            };
+            
+            // First, get fresh order data to ensure we have the latest items
+            const getResponse = await fetch(`http://localhost:3000/orders/${order.id}`);
+            if (!getResponse.ok) {
+              throw new Error('Failed to fetch the latest order data');
+            }
+            
+            const latestOrder = await getResponse.json();
+            
+            // Now update with the latest items
+            const response = await fetch(`http://localhost:3000/orders/${order.id}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+                order: updatedOrder,
+                items: latestOrder.items || []
+          })
+        });
+        
+        if (!response.ok) {
+              throw new Error('Failed to mark order as complete');
+            }
+            
+            showNotification('Order marked as complete', 'success');
+            
+            // Refresh pending orders immediately
+            loadPendingOrders();
+            
+            // Navigate to completed orders tab immediately
+            document.querySelector('[data-tab="completed-orders"]').click();
+            
+            // Load completed orders with a slight delay to ensure data is updated
+            setTimeout(() => {
+              loadCompletedOrders();
+            }, 1000);
+            
+          } catch (error) {
+            showNotification('Error: ' + error.message, 'error');
+          }
+        });
+      }
+      
+      // Add delete button functionality
+      orderCard.querySelector('.btn-delete').addEventListener('click', async (e) => {
+        e.stopPropagation();
+        if (confirm('Are you sure you want to delete this order?')) {
+          try {
+            const response = await fetch(`http://localhost:3000/orders/${order.id}`, {
+              method: 'DELETE'
+            });
+            
+            if (!response.ok) {
+              throw new Error('Failed to delete order');
+            }
+            
+            showNotification('Order deleted successfully', 'success');
+            
+            // Refresh both pending and completed orders
+            loadPendingOrders();
+            loadCompletedOrders();
+      } catch (error) {
+        showNotification('Error: ' + error.message, 'error');
+          }
+        }
+      });
+      
+      return orderCard;
+    }
+    
+    // Load order for editing
+    async function loadOrderForEdit(orderId) {
+      try {
+        const response = await fetch(`http://localhost:3000/orders/${orderId}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch order details');
+        }
+        
+        const order = await response.json();
+        
+        // Set form values
+        customerNameInput.value = order.customer || '';
+        orderSourceSelect.value = order.source || '';
+        
+        if (order.scheduled_at) {
+          scheduledTimeInput.value = formatDateTimeLocal(new Date(order.scheduled_at));
+        } else {
+          scheduledTimeInput.value = '';
+        }
+        
+        // Clear existing items
+        itemsList.innerHTML = '';
+        
+        // Add existing items
+        if (order.items && order.items.length > 0) {
+          order.items.forEach(item => addItemRow(item));
+        } else {
+          // Add one empty item row if no items
+          addItemRow();
+        }
+        
+        // Set the current order ID being edited
+        currentOrderId = order.id;
+        
+        // Switch to create order tab
+        document.querySelector('[data-tab="create-order"]').click();
+        
+      } catch (error) {
+        showNotification('Error loading order: ' + error.message, 'error');
+      }
+    }
+    
+    // Format date for datetime-local input
+    function formatDateTimeLocal(date) {
+      const year = date.getFullYear();
+      const month = (date.getMonth() + 1).toString().padStart(2, '0');
+      const day = date.getDate().toString().padStart(2, '0');
+      const hours = date.getHours().toString().padStart(2, '0');
+      const minutes = date.getMinutes().toString().padStart(2, '0');
+      
+      return `${year}-${month}-${day}T${hours}:${minutes}`;
+    }
+    
+    // Show notification
+    function showNotification(message, type) {
+      const notification = document.createElement('div');
+      notification.className = `notification notification-${type}`;
+      notification.textContent = message;
+      
+      document.body.appendChild(notification);
+      
+      // Remove after 3 seconds
+      setTimeout(() => {
+          notification.remove();
+      }, 3000);
+    }
+    
+    // Initial setup
+    document.addEventListener('DOMContentLoaded', () => {
+      // Add one empty item row
+      addItemRow();
+      
+      // Load pending orders
+      loadPendingOrders();
+    });
+  </script>
+</body>
+</html> 
+
