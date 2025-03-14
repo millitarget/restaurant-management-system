@@ -6,6 +6,7 @@
   <title>Kitchen Station | Restaurant Order Management</title>
   <link rel="stylesheet" href="styles.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="api-config.js"></script>
   <script>
     // Make Supabase globally available as supabaseJs
     const supabaseJs = supabase;
@@ -63,23 +64,19 @@
     // Load initial data
     async function loadInitialData() {
       try {
-        // Fetch data for kitchen station from the backend
-        const response = await fetch('http://localhost:3000/stations/kitchen');
+        // Use API_CONFIG to get the appropriate URL for the environment
+        const response = await fetch(API_CONFIG.getUrl('/stations/kitchen'));
         
         if (!response.ok) {
           throw new Error('Failed to fetch data');
         }
         
         const data = await response.json();
-        
-        // Update the summary panel
         updateSummary(data);
-        
-        // Render each item with its orders
         renderItems(data.items);
-        
       } catch (error) {
         console.error('Error loading initial data:', error);
+        document.getElementById('items-container').innerHTML = `<div class="error">Error loading data: ${error.message}</div>`;
       }
     }
     

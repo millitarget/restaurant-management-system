@@ -7,6 +7,8 @@
   <link rel="stylesheet" href="styles.css">
   <!-- Supabase JS library -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- API Config for environment-aware endpoints -->
+  <script src="api-config.js"></script>
   <script>
     // Make Supabase globally available as supabaseJs
     const supabaseJs = supabase;
@@ -82,26 +84,19 @@
     // Load initial data
     async function loadInitialData() {
       try {
-        // Fetch data for grill station from the backend
-        const response = await fetch('http://localhost:3000/stations/grill');
+        // Use API_CONFIG to get the appropriate URL for the environment
+        const response = await fetch(API_CONFIG.getUrl('/stations/grill'));
         
         if (!response.ok) {
           throw new Error('Failed to fetch data');
         }
         
         const data = await response.json();
-        console.log('Received data:', data);
-        
-        // Render orders and their items
+        console.log("Received data:", data);
         renderOrders(data);
-        
       } catch (error) {
         console.error('Error loading initial data:', error);
-        itemsContainerElement.innerHTML = `
-          <div class="error-message">
-            Failed to load orders: ${error.message}. Please try refreshing the page.
-          </div>
-        `;
+        document.getElementById('orders-container').innerHTML = `<div class="error">Error loading data: ${error.message}</div>`;
       }
     }
     
@@ -206,7 +201,7 @@
     // Update item status
     async function updateItemStatus(itemId, newStatus) {
       try {
-        const response = await fetch(`http://localhost:3000/stations/item/${itemId}/status`, {
+        const response = await fetch(API_CONFIG.getUrl(`/stations/item/${itemId}/status`), {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json'

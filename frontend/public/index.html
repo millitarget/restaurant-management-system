@@ -7,6 +7,8 @@
   <link rel="stylesheet" href="styles.css">
   <!-- Supabase JS library -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- API Config for environment-aware endpoints -->
+  <script src="api-config.js"></script>
   <script>
     // Make Supabase globally available as supabaseJs
     const supabaseJs = supabase;
@@ -53,7 +55,6 @@
     .grill { background-color: #F44336; }
     .kitchen { background-color: #4CAF50; }
     .assembly { background-color: #2196F3; }
-    .phone { background-color: #FF5722; }
   </style>
 </head>
 <body>
@@ -70,15 +71,6 @@
             <div class="nav-header manager">Manager Dashboard</div>
             <div class="nav-body">
               <p>Create and manage orders. Add, edit, and track orders across all stations.</p>
-            </div>
-          </a>
-        </div>
-        
-        <div class="nav-card">
-          <a href="phone-order.html">
-            <div class="nav-header phone">Atendimento Telefónico</div>
-            <div class="nav-body">
-              <p>Interface otimizada para registar pedidos por telefone com seleção rápida de itens e horários.</p>
             </div>
           </a>
         </div>

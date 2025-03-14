@@ -1,0 +1,15 @@
+{
+  "version": 2,
+  "builds": [
+    { "src": "frontend/public/**/*", "use": "@vercel/static" },
+    { "src": "backend/src/index.js", "use": "@vercel/node" }
+  ],
+  "routes": [
+    { "src": "/api/(.*)", "dest": "backend/src/index.js" },
+    { "src": "/(.*)", "dest": "frontend/public/$1", "continue": true },
+    { "handle": "filesystem" }
+  ],
+  "env": {
+    "NODE_ENV": "production"
+  }
+} 

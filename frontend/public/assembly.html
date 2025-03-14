@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Assembly Station | Restaurant Order Management</title>
   <link rel="stylesheet" href="styles.css">
+  <!-- API Config for environment-aware endpoints -->
+  <script src="api-config.js"></script>
   <!-- Supabase JS library -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
@@ -378,7 +380,7 @@
         
         // Add a timestamp to prevent caching
         const timestamp = new Date().getTime();
-        const url = `http://localhost:3000/stations/assembly?t=${timestamp}`;
+        const url = API_CONFIG.getUrl(`/stations/assembly?t=${timestamp}`);
         console.log('Fetching from URL:', url);
         
         const response = await fetch(url, {
@@ -542,11 +544,18 @@
     }
     
     // Update order status
-    async function updateOrderStatus(orderId, status, assigned_to) {
+    async function updateOrderStatus(orderId, status, assignedTo) {
       try {
-        console.log(`Starting update for order ${orderId} - Status: ${status}, Assigned to: ${assigned_to}`);
+        const orderTile = document.getElementById(`order-${orderId}`);
+        if (orderTile) {
+          orderTile.className = `order-tile ${status}`;
+          const statusBadge = orderTile.querySelector('.status-badge');
+          if (statusBadge) {
+            statusBadge.textContent = `Status: ${status}, Assigned to: ${assignedTo}`;
+          }
+        }
         
-        const response = await fetch(`http://localhost:3000/orders/${orderId}`, {
+        const response = await fetch(API_CONFIG.getUrl(`/orders/${orderId}`), {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -554,24 +563,22 @@
             'Pragma': 'no-cache',
             'Expires': '0'
           },
-          body: JSON.stringify({ status, assigned_to })
+          body: JSON.stringify({
+            status: status,
+            assigned_to: assignedTo
+          })
         });
         
-        console.log(`Response status: ${response.status}`);
-        
         if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          console.error('Server returned error:', errorData);
-          throw new Error(`Failed to update order status: ${response.status} ${response.statusText}`);
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to update order status");
         }
         
-        // Force a complete refresh of the page
-        setTimeout(() => {
-          window.location.reload();
-        }, 500);
+        return await response.json();
       } catch (error) {
-        console.error('Error updating order status:', error);
-        alert('Failed to update order status. Please try again.');
+        console.error("Error updating order status:", error);
+        showNotification(`Error: ${error.message}`, "error");
+        throw error;
       }
     }
     
@@ -604,29 +611,27 @@
     // Fetch a single order with its items
     async function fetchOrderWithItems(orderId) {
       try {
-        const response = await fetch(`http://localhost:3000/orders/${orderId}`);
-        if (!response.ok) throw new Error('Failed to fetch order details');
+        const response = await fetch(API_CONFIG.getUrl(`/orders/${orderId}`));
+        if (!response.ok) {
+          throw new Error("Failed to fetch order details");
+        }
         
         const order = await response.json();
         
-        // If the order is done, remove it from the display
         if (order.status === 'done') {
-          const tileElement = document.getElementById(`order-${order.id}`);
-          if (tileElement) {
-            tileElement.remove();
+          const orderElement = document.getElementById(`order-${order.id}`);
+          if (orderElement) {
+            orderElement.remove();
           }
-          return;
+        } else {
+          updateOrderDisplay(order);
         }
         
-        // Update or add to the UI
-        const existingTile = document.getElementById(`order-${order.id}`);
-        if (existingTile) {
-          existingTile.remove();
-        }
-        
-        renderOrderTile(order);
+        return order;
       } catch (error) {
-        console.error('Error fetching order details:', error);
+        console.error("Error fetching order:", error);
+        showNotification(`Error: ${error.message}`, "error");
+        throw error;
       }
     }
     
@@ -635,7 +640,7 @@
       const timeframeSelect = document.getElementById('historyTimeframe');
       const timeframe = timeframeSelect ? timeframeSelect.value : 'day';
       
-      fetchWithAuth(`${API_URL}/stations/assembly/history?timeframe=${timeframe}`)
+      fetchWithAuth(API_CONFIG.getUrl(`/stations/assembly/history?timeframe=${timeframe}`))
         .then(response => response.json())
         .then(completedOrders => {
           const historyContainer = document.getElementById('historyContainer');
@@ -736,9 +741,10 @@
     
     // Assign order to current employee 
     async function assignOrder(orderId) {
-      console.log(`Assigning order ${orderId} to ${EMPLOYEE_NAME}`);
+      showNotification(`Assigning order ${orderId} to ${EMPLOYEE_NAME}`);
+      
       try {
-        const response = await fetch(`http://localhost:3000/stations/assembly/order/${orderId}`, {
+        const response = await fetch(API_CONFIG.getUrl(`/stations/assembly/order/${orderId}`), {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -746,33 +752,44 @@
             'Pragma': 'no-cache',
             'Expires': '0'
           },
-          body: JSON.stringify({ 
-            status: 'in_progress', 
-            assigned_to: EMPLOYEE_NAME 
+          body: JSON.stringify({
+            status: 'in-progress',
+            assigned_to: EMPLOYEE_NAME
           })
         });
         
         if (!response.ok) {
-          throw new Error(`Failed to assign order: ${response.status}`);
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to assign order");
         }
         
-        console.log('Order assigned successfully');
+        const result = await response.json();
+        showNotification(`Order ${orderId} assigned to ${EMPLOYEE_NAME}`, "success");
         
-        // Reload the page to refresh the data
-        setTimeout(() => {
-          window.location.reload();
-        }, 500);
+        // Update UI
+        const orderTile = document.getElementById(`order-${orderId}`);
+        if (orderTile) {
+          orderTile.className = 'order-tile in-progress';
+          const statusBadge = orderTile.querySelector('.status-badge');
+          if (statusBadge) {
+            statusBadge.textContent = `Status: in-progress, Assigned to: ${EMPLOYEE_NAME}`;
+          }
+        }
+        
+        return result;
       } catch (error) {
-        console.error('Error assigning order:', error);
-        alert('Failed to assign order. Please try again.');
+        console.error("Error assigning order:", error);
+        showNotification(`Error: ${error.message}`, "error");
+        throw error;
       }
     }
     
     // Mark order as done
     async function markAsDone(orderId) {
-      console.log(`Marking order ${orderId} as done`);
+      showNotification(`Marking order ${orderId} as done`);
+      
       try {
-        const response = await fetch(`http://localhost:3000/stations/assembly/order/${orderId}`, {
+        const response = await fetch(API_CONFIG.getUrl(`/stations/assembly/order/${orderId}`), {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -780,25 +797,31 @@
             'Pragma': 'no-cache',
             'Expires': '0'
           },
-          body: JSON.stringify({ 
-            status: 'done', 
-            assigned_to: null 
+          body: JSON.stringify({
+            status: 'done',
+            assigned_to: EMPLOYEE_NAME
           })
         });
         
         if (!response.ok) {
-          throw new Error(`Failed to mark order as done: ${response.status}`);
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to mark order as done");
         }
         
-        console.log('Order marked as done successfully');
+        const result = await response.json();
+        showNotification(`Order ${orderId} marked as done`, "success");
         
-        // Reload the page to refresh the data
-        setTimeout(() => {
-          window.location.reload();
-        }, 500);
+        // Remove the order from the UI
+        const orderTile = document.getElementById(`order-${orderId}`);
+        if (orderTile) {
+          orderTile.remove();
+        }
+        
+        return result;
       } catch (error) {
-        console.error('Error marking order as done:', error);
-        alert('Failed to mark order as done. Please try again.');
+        console.error("Error marking order as done:", error);
+        showNotification(`Error: ${error.message}`, "error");
+        throw error;
       }
     }
   </script>

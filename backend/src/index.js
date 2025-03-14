@@ -38,17 +38,29 @@ app.use((req, res, next) => {
   next();
 });
 
-// Routes
+// Routes - handle both /orders and /api/orders paths for Vercel deployment
 app.use('/orders', ordersRoutes);
+app.use('/api/orders', ordersRoutes);
 app.use('/stations', stationsRoutes);
+app.use('/api/stations', stationsRoutes);
 
 // Home route
 app.get('/', (req, res) => {
   res.json({ message: 'Restaurant Order Management API' });
 });
 
+// Health check route
+app.get('/api', (req, res) => {
+  res.json({ message: 'Restaurant Order Management API', status: 'healthy' });
+});
+
 // Start server
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Connected to Supabase at ${supabaseUrl}`);
-}); 
+if (process.env.NODE_ENV !== 'production') {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+    console.log(`Connected to Supabase at ${supabaseUrl}`);
+  });
+}
+
+// Export for Vercel serverless function
+module.exports = app; 
