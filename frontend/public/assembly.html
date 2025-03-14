@@ -381,10 +381,10 @@
         // Add a timestamp to prevent caching
         const timestamp = new Date().getTime();
         const url = API_CONFIG.getUrl(`/stations/assembly?t=${timestamp}`);
+        
         console.log('Fetching from URL:', url);
         
         const response = await fetch(url, {
-          // Add no-cache headers
           headers: {
             'Cache-Control': 'no-cache, no-store, must-revalidate',
             'Pragma': 'no-cache',
@@ -423,11 +423,7 @@
         
       } catch (error) {
         console.error('Error loading assembly data:', error);
-        ordersGridElement.innerHTML = `
-          <div class="error-message">
-            Failed to load orders. Please try refreshing the page.
-          </div>
-        `;
+        ordersGridElement.innerHTML = `<div class="error-message">Error loading orders: ${error.message}</div>`;
       }
     }
     
