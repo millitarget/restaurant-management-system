@@ -1,0 +1,1 @@
+{"id":17,"source":"walk-in","customer":"NUNO S","order_time":"2025-03-14T23:11:10.076365+00:00","order_number":null,"status":"pending","assigned_to":null,"scheduled_at":"2025-03-14T23:00:00+00:00","items":[{"id":90,"station":"grill","order_id":17,"quantity":1,"item_name":"FRANGO","item_status":"pending","preparation_time_minutes":15}]}

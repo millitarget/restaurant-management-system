@@ -1,0 +1,1 @@
+{"id":19,"source":"walk-in","customer":"Churrasco Test","order_time":"2025-03-15T09:10:01.087674+00:00","order_number":null,"status":"pending","assigned_to":null,"scheduled_at":null,"items":[{"id":92,"station":"churrasco","order_id":19,"quantity":1,"item_name":"Test Churrasco","item_status":"pending","preparation_time_minutes":15}]}

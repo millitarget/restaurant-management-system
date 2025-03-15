@@ -1,0 +1,1 @@
+{"id":16,"source":"phone","customer":"NUNO S","order_time":"2025-03-14T23:09:11.831189+00:00","order_number":null,"status":"pending","assigned_to":null,"scheduled_at":"2025-03-15T18:00:00+00:00","items":[{"id":89,"station":"churrasco","order_id":16,"quantity":1,"item_name":"1 Frango do Churrasco","item_status":"pending","preparation_time_minutes":15}]}
