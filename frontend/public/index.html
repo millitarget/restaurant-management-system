@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Restaurant Order Management</title>
+  <title>Restaurant Management System</title>
   <link rel="stylesheet" href="styles.css">
   <!-- Supabase JS library -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -14,6 +14,36 @@
     const supabaseJs = supabase;
   </script>
   <style>
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 20px 0;
+      margin-bottom: 30px;
+      border-bottom: 2px solid rgba(0,0,0,0.05);
+    }
+    
+    .logo {
+      font-size: 28px;
+      font-weight: 700;
+      color: #673AB7;
+      background: linear-gradient(135deg, #673AB7, #E91E63);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-fill-color: transparent;
+    }
+    
+    .clock {
+      font-size: 20px;
+      font-weight: 500;
+      color: #666;
+      background-color: white;
+      padding: 10px 16px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
     .nav-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -41,14 +71,24 @@
     }
     
     .nav-header {
-      padding: 1.5rem;
-      color: white;
-      font-size: 1.5rem;
-      font-weight: bold;
+      padding: 30px 15px;
+      text-align: center;
+      font-size: 24px;
+      font-weight: 600;
     }
     
     .nav-body {
-      padding: 1.5rem;
+      flex: 1;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    
+    .nav-body p {
+      color: #666;
+      line-height: 1.6;
+      margin-bottom: 20px;
     }
     
     .fries { background-color: #FF9800; }
@@ -56,6 +96,15 @@
     .kitchen { background-color: #4CAF50; }
     .assembly { background-color: #2196F3; }
     .phone { background-color: #FF5722; }
+    
+    footer {
+      margin-top: 40px;
+      text-align: center;
+      color: #888;
+      font-size: 14px;
+      padding: 20px 0;
+      border-top: 1px solid rgba(0,0,0,0.05);
+    }
   </style>
 </head>
 <body>
@@ -64,14 +113,19 @@
       <div class="logo">Restaurant Order Management</div>
       <div class="clock" id="clock"></div>
     </header>
-    
     <main>
+      <h1>Welcome to the Restaurant Management System</h1>
+      <p class="intro-text">Select a module below to manage different aspects of the restaurant operations.</p>
+      
       <div class="nav-grid">
         <div class="nav-card">
           <a href="manager.html">
             <div class="nav-header manager">Manager Dashboard</div>
             <div class="nav-body">
-              <p>Create and manage orders. Add, edit, and track orders across all stations.</p>
+              <p>Comprehensive dashboard for managing orders, viewing analytics, and overseeing all restaurant operations.</p>
+              <div class="nav-action">
+                <span class="btn btn-primary">Open Dashboard</span>
+              </div>
             </div>
           </a>
         </div>
@@ -81,6 +135,9 @@
             <div class="nav-header phone">Pedidos por Telefone</div>
             <div class="nav-body">
               <p>Interface otimizada para registar pedidos por telefone com seleção rápida de itens e horários.</p>
+              <div class="nav-action">
+                <span class="btn btn-success">Register Orders</span>
+              </div>
             </div>
           </a>
         </div>
@@ -89,7 +146,10 @@
           <a href="fries.html">
             <div class="nav-header fries">Fries Station</div>
             <div class="nav-body">
-              <p>View and manage potato fryer orders. Shows quantities of fry items that need to be prepared.</p>
+              <p>View and manage orders requiring preparation at the fries station. Track cooking times and status.</p>
+              <div class="nav-action">
+                <span class="btn btn-warning">Open Station</span>
+              </div>
             </div>
           </a>
         </div>
@@ -98,7 +158,10 @@
           <a href="grill.html">
             <div class="nav-header grill">Grill Station</div>
             <div class="nav-body">
-              <p>View and manage barbecue grill orders. Shows quantities of meat items that need to be prepared.</p>
+              <p>Monitor and update orders for the grill station. View pending orders and mark items as complete.</p>
+              <div class="nav-action">
+                <span class="btn btn-danger">Open Station</span>
+              </div>
             </div>
           </a>
         </div>
@@ -107,7 +170,10 @@
           <a href="kitchen.html">
             <div class="nav-header kitchen">Kitchen Station</div>
             <div class="nav-body">
-              <p>View and manage kitchen orders. Shows quantities of rice, salad, and other kitchen items that need to be prepared.</p>
+              <p>Manage kitchen preparations, track cooking processes, and update order statuses in real-time.</p>
+              <div class="nav-action">
+                <span class="btn btn-warning">Open Station</span>
+              </div>
             </div>
           </a>
         </div>
@@ -116,29 +182,33 @@
           <a href="assembly.html">
             <div class="nav-header assembly">Assembly Station</div>
             <div class="nav-body">
-              <p>View complete order details for assembling customer orders. Shows all items grouped by station for each order.</p>
+              <p>Final assembly station for preparing completed orders before they're served to customers.</p>
+              <div class="nav-action">
+                <span class="btn btn-primary">Open Station</span>
+              </div>
             </div>
           </a>
         </div>
       </div>
     </main>
+    
+    <footer>
+      <p>&copy; 2025 Restaurant Management System. All rights reserved.</p>
+    </footer>
   </div>
 
   <script>
-    // Initialize clock
+    // Clock functionality
     function updateClock() {
-      const clockElement = document.getElementById('clock');
       const now = new Date();
-      clockElement.textContent = now.toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit'
-      });
+      const timeStr = now.toLocaleTimeString();
+      const dateStr = now.toLocaleDateString();
+      document.getElementById('clock').textContent = `${dateStr} ${timeStr}`;
     }
     
     // Update clock every second
-    updateClock();
     setInterval(updateClock, 1000);
+    updateClock(); // Initial call
   </script>
 </body>
 </html> 

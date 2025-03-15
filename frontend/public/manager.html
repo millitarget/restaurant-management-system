@@ -13,313 +13,465 @@
   <style>
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f5f5f5;
       margin: 0;
       padding: 0;
+      background-color: #f8f9fa;
+      color: #333;
     }
-
+    
     .container {
-      max-width: 1200px;
+      max-width: 1400px;
       margin: 0 auto;
       padding: 20px;
     }
-
-    .nav-header {
+    
+    .manager {
+      background: linear-gradient(135deg, #673AB7, #9C27B0);
       color: white;
-      padding: 15px;
-      border-radius: 8px;
-      margin-bottom: 10px;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
       display: flex;
       justify-content: space-between;
       align-items: center;
     }
-
-    .manager {
-      background-color: #673AB7;
+    
+    .manager h1 {
+      margin: 0;
+      font-size: 28px;
     }
-
-    .nav-items {
+    
+    .nav-tabs {
       display: flex;
-      justify-content: space-around;
       margin-bottom: 20px;
+      border-bottom: 1px solid #ddd;
+      gap: 5px;
     }
-
+    
     .nav-tab {
-      flex: 1;
-      background-color: #f1f1f1;
-      padding: 10px 15px;
-      text-align: center;
-      border-radius: 4px;
-      margin: 0 5px;
+      padding: 12px 20px;
       cursor: pointer;
-      transition: all 0.3s;
+      border-radius: 8px 8px 0 0;
+      background-color: #f1f1f1;
+      border: 1px solid #ddd;
+      border-bottom: none;
+      transition: all 0.3s ease;
+      font-weight: 500;
     }
-
+    
+    .nav-tab:hover {
+      background-color: #e9e9e9;
+      transform: translateY(-3px);
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    
     .nav-tab.active {
-      background-color: #2196F3;
+      background-color: #673AB7;
       color: white;
+      border-color: #673AB7;
+      box-shadow: 0 2px 8px rgba(103, 58, 183, 0.3);
     }
-
+    
     .tab-content {
       display: none;
+      animation: fadeIn 0.3s ease;
     }
-
+    
     .tab-content.active {
       display: block;
     }
-
-    #order-form {
-      background-color: white;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      margin-bottom: 20px;
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
-
-    h1, h2, h3 {
-      color: #333;
-    }
-
-    .form-group {
-      margin-bottom: 15px;
-    }
-
-    label {
-      display: block;
-      margin-bottom: 5px;
-      font-weight: 500;
-    }
-
-    .form-control {
-      width: 100%;
-      padding: 8px 12px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-      font-size: 16px;
-    }
-
-    .items-container {
-      margin-top: 20px;
-    }
-
-    .item-row {
+    
+    .orders-container {
       display: grid;
-      grid-template-columns: 3fr 1fr 1fr 1fr 1fr 80px;
-      gap: 10px;
-      margin-bottom: 10px;
-      align-items: center;
-    }
-
-    .item-header {
-      font-weight: bold;
-      padding: 8px 0;
-      border-bottom: 2px solid #eee;
-    }
-
-    .btn-add-item {
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      padding: 8px 16px;
-      cursor: pointer;
-      font-size: 14px;
-      margin-top: 10px;
-    }
-
-    .btn-remove-item {
-      background-color: #f44336;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      padding: 5px 10px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-
-    .btn-save {
-      background-color: #2196F3;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      padding: 10px 20px;
-      cursor: pointer;
-      font-size: 16px;
-      margin-top: 20px;
-    }
-    
-    .btn-cancel {
-      background-color: #f44336;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      padding: 10px 20px;
-      cursor: pointer;
-      font-size: 16px;
-    }
-    
-    .btn-edit {
-      background-color: #FF9800;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      padding: 5px 10px;
-      cursor: pointer;
-      font-size: 14px;
-      margin-top: 5px;
-    }
-
-    .time-slots-wrapper {
-      display: flex;
-      flex-direction: column;
+      grid-template-columns: 1fr 1fr;
       gap: 20px;
     }
-
+    
+    .time-slots, .cashier-orders {
+      background-color: white;
+      border-radius: 10px;
+      padding: 15px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    }
+    
+    .section-header {
+      font-size: 18px;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #f1f1f1;
+      color: #673AB7;
+      font-weight: 600;
+    }
+    
     .time-slot {
       margin-bottom: 20px;
-    }
-
-    .time-slot-header {
-      background-color: #673AB7;
-      color: white;
-      padding: 8px 15px;
-      border-radius: 4px 4px 0 0;
-      font-weight: bold;
-      margin-bottom: 0;
-    }
-
-    .orders-list {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      background-color: white;
-      border-radius: 0 0 4px 4px;
-      padding: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-
-    .orders-container {
-      margin-top: 20px;
-      background-color: white;
-      border-radius: 4px;
-      padding: 15px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-
-    .order-card {
-      border-left: 3px solid #2196F3;
-      background-color: #f9f9f9;
-      padding: 10px;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: all 0.3s ease;
+      border: 1px solid #eee;
+      border-radius: 8px;
       overflow: hidden;
     }
-
-    .order-card:hover {
-      background-color: #f0f0f0;
+    
+    .time-slot-header {
+      background-color: #f8f9fa;
+      padding: 10px 15px;
+      font-weight: 600;
+      border-bottom: 1px solid #eee;
+      color: #673AB7;
     }
-
+    
+    .slot-orders, .cashier-orders {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding: 10px;
+    }
+    
+    .order-card {
+      border: 1px solid #eee;
+      border-radius: 8px;
+      padding: 15px;
+      background-color: white;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      transition: all 0.3s ease;
+    }
+    
+    .order-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    
     .order-header {
       display: flex;
       justify-content: space-between;
-      align-items: center;
+      margin-bottom: 10px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #eee;
     }
-
-    .order-summary {
-      font-size: 14px;
-      margin-top: 5px;
-      color: #666;
+    
+    .order-id {
+      font-weight: 600;
+      color: #673AB7;
     }
-
-    .order-details {
-      max-height: 0;
-      overflow: hidden;
-      transition: max-height 0.3s ease, padding 0.3s ease;
-      padding: 0;
-      margin-top: 0;
-    }
-
-    .order-card.expanded .order-details {
-      max-height: 500px;
-      padding-top: 10px;
-      margin-top: 10px;
-      border-top: 1px solid #eee;
-    }
-
+    
     .order-status {
       padding: 4px 8px;
       border-radius: 4px;
       font-size: 12px;
-      font-weight: bold;
+      font-weight: 600;
+      text-transform: uppercase;
     }
-
+    
     .status-pending {
       background-color: #FFC107;
       color: #333;
     }
-
+    
     .status-in-progress {
       background-color: #2196F3;
       color: white;
     }
-
+    
     .status-done {
       background-color: #4CAF50;
       color: white;
     }
-
-    .notification {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      padding: 15px 20px;
+    
+    .order-details {
+      margin-bottom: 10px;
+    }
+    
+    .order-customer {
+      font-weight: 500;
+    }
+    
+    .order-source {
+      font-size: 12px;
+      color: #666;
+      margin-top: 5px;
+    }
+    
+    .order-time {
+      font-size: 12px;
+      color: #666;
+    }
+    
+    .order-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    
+    .btn {
+      padding: 8px 12px;
+      border: none;
       border-radius: 4px;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.3s ease;
+    }
+    
+    .btn-primary {
+      background-color: #673AB7;
       color: white;
-      font-weight: bold;
-      z-index: 1000;
-      animation: fadeIn 0.3s, fadeOut 0.3s 2.7s;
-      max-width: 300px;
     }
-
-    .notification-success {
+    
+    .btn-primary:hover {
+      background-color: #5E35B1;
+      box-shadow: 0 2px 5px rgba(103, 58, 183, 0.3);
+    }
+    
+    .btn-success {
       background-color: #4CAF50;
+      color: white;
     }
-
-    .notification-error {
-      background-color: #f44336;
+    
+    .btn-success:hover {
+      background-color: #43A047;
+      box-shadow: 0 2px 5px rgba(76, 175, 80, 0.3);
     }
-
-    .notification-warning {
-      background-color: #FF9800;
+    
+    .btn-danger {
+      background-color: #F44336;
+      color: white;
     }
-
-    @keyframes fadeIn {
-      from {opacity: 0;}
-      to {opacity: 1;}
+    
+    .btn-danger:hover {
+      background-color: #E53935;
+      box-shadow: 0 2px 5px rgba(244, 67, 54, 0.3);
     }
-
-    @keyframes fadeOut {
-      from {opacity: 1;}
-      to {opacity: 0;}
+    
+    .no-orders {
+      padding: 20px;
+      text-align: center;
+      color: #666;
+      font-style: italic;
+      background-color: #f9f9f9;
+      border-radius: 8px;
+      margin: 10px 0;
+    }
+    
+    #order-form {
+      background-color: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    
+    .form-group {
+      margin-bottom: 15px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 500;
+      color: #333;
+    }
+    
+    .form-control {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+    
+    .form-control:focus {
+      border-color: #673AB7;
+      box-shadow: 0 0 0 2px rgba(103, 58, 183, 0.2);
+      outline: none;
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 20px;
+      color: #666;
+    }
+    
+    .error {
+      background-color: #FFEBEE;
+      color: #D32F2F;
+      padding: 15px;
+      border-radius: 8px;
+      margin: 10px 0;
+      font-weight: 500;
+    }
+    
+    @media (max-width: 768px) {
+      .orders-container {
+        grid-template-columns: 1fr;
+      }
+      
+      .nav-tabs {
+        flex-wrap: wrap;
+      }
+      
+      .nav-tab {
+        flex: 1 0 auto;
+        text-align: center;
+      }
+    }
+    
+    /* Order Details Styles */
+    .order-detail-card {
+      background-color: white;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    
+    .detail-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 2px solid #f1f1f1;
+    }
+    
+    .detail-header h2 {
+      margin: 0;
+      color: #673AB7;
+      font-size: 24px;
+    }
+    
+    .detail-info {
+      margin-bottom: 25px;
+    }
+    
+    .info-row {
+      display: flex;
+      margin-bottom: 10px;
+    }
+    
+    .info-label {
+      width: 100px;
+      font-weight: 600;
+      color: #555;
+    }
+    
+    .info-value {
+      flex: 1;
+    }
+    
+    .detail-items {
+      margin-bottom: 25px;
+    }
+    
+    .detail-items h3 {
+      margin-top: 0;
+      margin-bottom: 15px;
+      color: #673AB7;
+      font-size: 18px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #f1f1f1;
+    }
+    
+    .items-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    
+    .detail-item {
+      display: flex;
+      align-items: center;
+      padding: 10px;
+      background-color: #f8f9fa;
+      border-radius: 6px;
+      border-left: 4px solid #673AB7;
+    }
+    
+    .item-name {
+      flex: 1;
+      font-weight: 500;
+    }
+    
+    .item-quantity {
+      width: 50px;
+      text-align: center;
+      font-weight: 600;
+      color: #673AB7;
+    }
+    
+    .item-station {
+      width: 100px;
+      text-align: center;
+      background-color: #e9ecef;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+    
+    .item-status {
+      width: 100px;
+      text-align: center;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-left: 10px;
+    }
+    
+    .detail-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    
+    .no-items {
+      padding: 20px;
+      text-align: center;
+      color: #666;
+      font-style: italic;
+      background-color: #f9f9f9;
+      border-radius: 8px;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <header>
-      <div class="nav-header manager">
-        <h1>Restaurant Manager</h1>
-        <button id="create-order-btn" class="btn-save">Create New Order</button>
-      </div>
-      
-      <div class="nav-items">
-        <div class="nav-tab active" data-tab="time-slots">Time Slots</div>
-        <div class="nav-tab" data-tab="cashier">Cashier Orders</div>
-      </div>
-    </header>
+    <div class="manager">
+      <h1>Restaurant Order Management</h1>
+      <button id="create-order-btn" class="btn btn-primary">Create New Order</button>
+    </div>
     
-    <main>
+    <div class="nav-tabs">
+      <div class="nav-tab active" id="orders-tab">Orders</div>
+      <div class="nav-tab" id="details-tab">Order Details</div>
+      <div class="nav-tab" id="new-tab">New Order</div>
+    </div>
+    
+    <div class="tab-content active" id="orders-content">
+      <div class="orders-container">
+        <div class="time-slots">
+          <div class="section-header">Scheduled Orders</div>
+          <div id="time-slots-container"></div>
+        </div>
+        <div class="cashier-orders">
+          <div class="section-header">Walk-in & Unscheduled Orders</div>
+          <div id="cashier-orders-container"></div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="tab-content" id="details-content">
+      <div id="order-details-container">
+        <div class="no-orders">Select an order to view details</div>
+      </div>
+    </div>
+    
+    <div class="tab-content" id="new-content">
       <div id="order-form-container" style="display: none;">
         <div id="order-form" class="order-form">
           <h2 id="form-title">Create New Order</h2>
@@ -378,25 +530,7 @@
           </div>
         </div>
       </div>
-      
-      <div class="tab-content active" id="time-slots-content">
-        <h2>Orders by Time Slot</h2>
-        <div id="time-slots-container" class="time-slots-wrapper">
-          <!-- Time slots will be generated here -->
-        </div>
-        
-        <div id="orders-container" class="orders-container">
-          <!-- Orders will be dynamically loaded here -->
-        </div>
-      </div>
-      
-      <div class="tab-content" id="cashier-content">
-        <h2>Cashier Orders</h2>
-        <div id="cashier-orders-container" class="orders-list">
-          <!-- Cashier orders will be displayed here -->
-        </div>
-      </div>
-    </main>
+    </div>
   </div>
   
   <!-- Template for item row -->
@@ -421,7 +555,7 @@
   </template>
   
   <script>
-    // DOM Elements
+    // DOM elements
     const orderForm = document.getElementById('order-form');
     const orderFormContainer = document.getElementById('order-form-container');
     const formTitle = document.getElementById('form-title');
@@ -434,29 +568,46 @@
     const timeSlotsContainer = document.getElementById('time-slots-container');
     const cashierOrdersContainer = document.getElementById('cashier-orders-container');
     const itemTemplate = document.getElementById('item-template');
-    const navTabs = document.querySelectorAll('.nav-tab');
+    const orderTabs = document.querySelectorAll('.nav-tab');
     const tabContents = document.querySelectorAll('.tab-content');
     
-    // Tab switching functionality
-    navTabs.forEach(tab => {
-      tab.addEventListener('click', function() {
-        // Remove active class from all tabs
-        navTabs.forEach(t => t.classList.remove('active'));
+    // Tab navigation
+    orderTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        // Remove active class from all tabs and contents
+        orderTabs.forEach(t => t.classList.remove('active'));
         tabContents.forEach(c => c.classList.remove('active'));
         
-        // Add active class to clicked tab
-        this.classList.add('active');
+        // Add active class to clicked tab and corresponding content
+        tab.classList.add('active');
+        const contentId = tab.id.replace('-tab', '-content');
+        document.getElementById(contentId).classList.add('active');
         
-        // Show corresponding content
-        const tabId = this.getAttribute('data-tab');
-        document.getElementById(`${tabId}-content`).classList.add('active');
+        // If new order tab is clicked, show the order form
+        if (tab.id === 'new-tab') {
+          orderFormContainer.style.display = 'block';
+        } else {
+          orderFormContainer.style.display = 'none';
+        }
       });
     });
     
-    // Create Order button
-    createOrderBtn.addEventListener('click', function() {
-      resetForm();
+    // Create New Order button
+    document.getElementById('create-order-btn').addEventListener('click', () => {
+      // Clear the form
+      orderForm.reset();
+      
+      // Show the new order tab
+      orderTabs.forEach(t => t.classList.remove('active'));
+      tabContents.forEach(c => c.classList.remove('active'));
+      document.getElementById('new-tab').classList.add('active');
+      document.getElementById('new-content').classList.add('active');
+      
+      // Show the order form
       orderFormContainer.style.display = 'block';
+      
+      // Focus on the first input
+      document.querySelector('#order-form input').focus();
     });
     
     // Add item functionality
@@ -579,132 +730,227 @@
       cashierOrdersContainer.innerHTML = '';
       
       if (!orders || orders.length === 0) {
-        console.log('No orders found to organize');
-        timeSlotsContainer.innerHTML = '<p>No orders found.</p>';
-        cashierOrdersContainer.innerHTML = '<p>No cashier orders found.</p>';
+        console.log('No orders to organize');
+        timeSlotsContainer.innerHTML = '<div class="no-orders">No scheduled orders</div>';
+        cashierOrdersContainer.innerHTML = '<div class="no-orders">No walk-in orders</div>';
         return;
       }
       
       console.log(`Organizing ${orders.length} orders`);
       
-      // Group orders by time slots (10 min intervals)
+      // Initialize time slots and cashier orders
       const timeSlots = {};
       const cashierOrders = [];
       
+      // Process each order
       orders.forEach(order => {
-        // Handle cashier (walk-in) orders separately
-        if (order.source === 'walk-in') {
-          console.log(`Adding walk-in order ${order.id} to cashier orders`);
+        // Check if it's a walk-in order or a phone/online order without scheduled time
+        if (order.source === 'walk-in' || 
+            ((order.source === 'phone' || order.source === 'online') && !order.scheduled_at)) {
+          console.log(`Adding ${order.source} order to cashier orders: ${order.id}`);
           cashierOrders.push(order);
-        }
-        
-        // Group other orders by scheduled time
-        if (order.scheduled_at) {
-          const orderDate = new Date(order.scheduled_at);
-          // Round to nearest 10-minute slot
-          const minutes = Math.floor(orderDate.getMinutes() / 10) * 10;
-          orderDate.setMinutes(minutes, 0, 0);
+        } else if (order.scheduled_at) {
+          // Get the scheduled time and round to nearest 15 minutes for grouping
+          const scheduledTime = new Date(order.scheduled_at);
+          const roundedMinutes = Math.round(scheduledTime.getMinutes() / 15) * 15;
+          scheduledTime.setMinutes(roundedMinutes);
+          scheduledTime.setSeconds(0);
           
-          const slotKey = orderDate.toLocaleString();
+          // Format the time slot key
+          const timeSlotKey = scheduledTime.toLocaleTimeString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true
+          });
           
-          if (!timeSlots[slotKey]) {
-            timeSlots[slotKey] = [];
+          // Create the time slot if it doesn't exist
+          if (!timeSlots[timeSlotKey]) {
+            timeSlots[timeSlotKey] = [];
           }
           
-          console.log(`Adding order ${order.id} to time slot ${slotKey}`);
-          timeSlots[slotKey].push(order);
+          // Add the order to the time slot
+          timeSlots[timeSlotKey].push(order);
         }
       });
       
       // Render time slots
-      const sortedSlotKeys = Object.keys(timeSlots).sort((a, b) => new Date(a) - new Date(b));
-      console.log(`Found ${sortedSlotKeys.length} time slots`);
+      const sortedTimeSlots = Object.keys(timeSlots).sort((a, b) => {
+        return new Date('1970/01/01 ' + a) - new Date('1970/01/01 ' + b);
+      });
       
-      sortedSlotKeys.forEach(slotKey => {
+      sortedTimeSlots.forEach(slotKey => {
         const slotOrders = timeSlots[slotKey];
         
-        const timeSlot = document.createElement('div');
-        timeSlot.className = 'time-slot';
+        // Create time slot container
+        const timeSlotElement = document.createElement('div');
+        timeSlotElement.className = 'time-slot';
         
-        const timeHeader = document.createElement('div');
-        timeHeader.className = 'time-slot-header';
-        timeHeader.textContent = slotKey;
-        timeSlot.appendChild(timeHeader);
+        // Create time slot header
+        const timeSlotHeader = document.createElement('div');
+        timeSlotHeader.className = 'time-slot-header';
+        timeSlotHeader.textContent = slotKey;
+        timeSlotElement.appendChild(timeSlotHeader);
         
-        const ordersList = document.createElement('div');
-        ordersList.className = 'orders-list';
+        // Create orders container for this time slot
+        const slotOrdersContainer = document.createElement('div');
+        slotOrdersContainer.className = 'slot-orders';
         
+        // Add each order to the slot
         slotOrders.forEach(order => {
           const orderCard = createOrderCard(order);
-          ordersList.appendChild(orderCard);
+          slotOrdersContainer.appendChild(orderCard);
         });
         
-        timeSlot.appendChild(ordersList);
-        timeSlotsContainer.appendChild(timeSlot);
+        timeSlotElement.appendChild(slotOrdersContainer);
+        timeSlotsContainer.appendChild(timeSlotElement);
       });
       
       // Render cashier orders
-      console.log(`Rendering ${cashierOrders.length} cashier orders`);
-      cashierOrders.forEach(order => {
-        const orderCard = createOrderCard(order);
-        cashierOrdersContainer.appendChild(orderCard);
-      });
+      console.log(`Found ${cashierOrders.length} cashier orders`);
       
-      // Show message if no cashier orders
       if (cashierOrders.length === 0) {
-        cashierOrdersContainer.innerHTML = '<p>No cashier orders found.</p>';
+        cashierOrdersContainer.innerHTML = '<div class="no-orders">No walk-in or unscheduled orders</div>';
+      } else {
+        // Create orders container for cashier orders
+        const cashierOrdersElement = document.createElement('div');
+        cashierOrdersElement.className = 'cashier-orders';
+        
+        // Add each cashier order
+        cashierOrders.forEach(order => {
+          const orderCard = createOrderCard(order);
+          cashierOrdersElement.appendChild(orderCard);
+        });
+        
+        cashierOrdersContainer.appendChild(cashierOrdersElement);
       }
+    }
+    
+    // Format time for display
+    function formatTime(date) {
+      if (!date) return 'ASAP';
+      
+      return date.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      });
     }
     
     // Create compact order card with expand/collapse
     function createOrderCard(order) {
-      console.log(`Creating order card for order ${order.id}`);
-      
       const orderCard = document.createElement('div');
-      orderCard.className = 'order-card';
+      orderCard.className = `order-card status-${order.status}`;
       orderCard.dataset.orderId = order.id;
       
-      const statusClass = `status-${order.status.replace('_', '-')}`;
+      // Format the time
+      const orderTime = order.scheduled_at ? new Date(order.scheduled_at) : null;
+      const formattedTime = formatTime(orderTime);
       
-      // Create item summary text
-      let itemSummary = '';
-      if (order.items && order.items.length > 0) {
-        console.log(`Order ${order.id} has ${order.items.length} items`);
-        itemSummary = order.items.map(item => `${item.quantity}x ${item.item_name}`).join(', ');
-      } else {
-        console.log(`Order ${order.id} has no items`);
-        itemSummary = 'No items';
-      }
+      // Create order header
+      const orderHeader = document.createElement('div');
+      orderHeader.className = 'order-header';
       
-      // Create compact order summary
-      orderCard.innerHTML = `
-        <div class="order-header">
-          <div><strong>#${order.order_number || 'N/A'}</strong> - ${order.customer}</div>
-          <span class="order-status ${statusClass}">${order.status}</span>
-        </div>
-        <div class="order-summary">${itemSummary}</div>
-        <div class="order-details">
-          <p>Source: ${order.source}</p>
-          <p>Time: ${order.scheduled_at ? new Date(order.scheduled_at).toLocaleString() : new Date(order.order_time).toLocaleString()}</p>
-          <button class="btn-edit" data-order-id="${order.id}">Edit Order</button>
-        </div>
-      `;
+      // Order ID
+      const orderId = document.createElement('div');
+      orderId.className = 'order-id';
+      orderId.textContent = `Order #${order.id}`;
+      orderHeader.appendChild(orderId);
       
-      // Toggle expand/collapse on click
-      orderCard.addEventListener('click', function(e) {
-        // Don't expand if clicking edit button
-        if (e.target.classList.contains('btn-edit')) {
-          e.stopPropagation();
-          loadOrderForEdit(order.id);
-          return;
-        }
-        
-        this.classList.toggle('expanded');
-      });
+      // Order status
+      const orderStatus = document.createElement('div');
+      orderStatus.className = `order-status status-${order.status}`;
+      orderStatus.textContent = order.status;
+      orderHeader.appendChild(orderStatus);
       
-      // Add edit button functionality
-      orderCard.querySelector('.btn-edit').addEventListener('click', () => {
+      orderCard.appendChild(orderHeader);
+      
+      // Order details
+      const orderDetails = document.createElement('div');
+      orderDetails.className = 'order-details';
+      
+      // Customer name
+      const customerName = document.createElement('div');
+      customerName.className = 'order-customer';
+      customerName.textContent = order.customer;
+      orderDetails.appendChild(customerName);
+      
+      // Order source
+      const orderSource = document.createElement('div');
+      orderSource.className = 'order-source';
+      orderSource.textContent = `Source: ${order.source}`;
+      orderDetails.appendChild(orderSource);
+      
+      // Order time
+      const orderTimeElement = document.createElement('div');
+      orderTimeElement.className = 'order-time';
+      orderTimeElement.textContent = `Time: ${formattedTime}`;
+      orderDetails.appendChild(orderTimeElement);
+      
+      orderCard.appendChild(orderDetails);
+      
+      // Order actions
+      const orderActions = document.createElement('div');
+      orderActions.className = 'order-actions';
+      
+      // Edit button
+      const editButton = document.createElement('button');
+      editButton.className = 'btn btn-primary';
+      editButton.textContent = 'Edit';
+      editButton.addEventListener('click', (e) => {
+        e.stopPropagation();
         loadOrderForEdit(order.id);
+      });
+      orderActions.appendChild(editButton);
+      
+      // Complete button
+      const completeButton = document.createElement('button');
+      completeButton.className = 'btn btn-success';
+      completeButton.textContent = 'Complete';
+      
+      // Hide complete button if order is already done
+      if (order.status === 'done') {
+        completeButton.style.display = 'none';
+      } else {
+        completeButton.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          try {
+            const updatedOrder = {
+              id: order.id,
+              status: 'done'
+            };
+            
+            const response = await fetch(API_CONFIG.getUrl(`/orders/${order.id}`), {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'application/json'
+              },
+              body: JSON.stringify(updatedOrder)
+            });
+            
+            if (!response.ok) {
+              throw new Error('Failed to update order status');
+            }
+            
+            // Update the UI
+            orderStatus.textContent = 'done';
+            orderStatus.className = 'order-status status-done';
+            orderCard.className = 'order-card status-done';
+            completeButton.style.display = 'none';
+            
+            showNotification('Order marked as complete', 'success');
+          } catch (error) {
+            console.error('Error updating order status:', error);
+            showNotification('Error: ' + error.message, 'error');
+          }
+        });
+      }
+      orderActions.appendChild(completeButton);
+      
+      orderCard.appendChild(orderActions);
+      
+      // Make the entire card clickable to view details
+      orderCard.addEventListener('click', () => {
+        loadOrderDetails(order.id);
       });
       
       return orderCard;
@@ -898,6 +1144,159 @@
           notification.remove();
         }
       }, 3000);
+    }
+    
+    // Load order details for viewing
+    async function loadOrderDetails(orderId) {
+      try {
+        // Show loading state
+        const detailsContainer = document.getElementById('order-details-container');
+        detailsContainer.innerHTML = '<div class="loading">Loading order details...</div>';
+        
+        // Show the details tab
+        document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        document.getElementById('details-tab').classList.add('active');
+        document.getElementById('details-content').classList.add('active');
+        
+        // Fetch order details
+        const response = await fetch(API_CONFIG.getUrl(`/orders/${orderId}`));
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch order details');
+        }
+        
+        const order = await response.json();
+        
+        // Format the time
+        const orderTime = order.scheduled_at ? new Date(order.scheduled_at) : null;
+        const formattedTime = formatTime(orderTime);
+        
+        // Create order details HTML
+        let itemsHtml = '';
+        if (order.items && order.items.length > 0) {
+          itemsHtml = order.items.map(item => `
+            <div class="detail-item">
+              <div class="item-name">${item.item_name}</div>
+              <div class="item-quantity">x${item.quantity}</div>
+              <div class="item-station">${item.station}</div>
+              <div class="item-status status-${item.item_status}">${item.item_status}</div>
+            </div>
+          `).join('');
+        } else {
+          itemsHtml = '<div class="no-items">No items in this order</div>';
+        }
+        
+        detailsContainer.innerHTML = `
+          <div class="order-detail-card">
+            <div class="detail-header">
+              <h2>Order #${order.id}</h2>
+              <div class="order-status status-${order.status}">${order.status}</div>
+            </div>
+            
+            <div class="detail-info">
+              <div class="info-row">
+                <div class="info-label">Customer:</div>
+                <div class="info-value">${order.customer}</div>
+              </div>
+              <div class="info-row">
+                <div class="info-label">Source:</div>
+                <div class="info-value">${order.source}</div>
+              </div>
+              <div class="info-row">
+                <div class="info-label">Time:</div>
+                <div class="info-value">${formattedTime}</div>
+              </div>
+              <div class="info-row">
+                <div class="info-label">Created:</div>
+                <div class="info-value">${new Date(order.created_at).toLocaleString()}</div>
+              </div>
+            </div>
+            
+            <div class="detail-items">
+              <h3>Items</h3>
+              <div class="items-list">
+                ${itemsHtml}
+              </div>
+            </div>
+            
+            <div class="detail-actions">
+              <button class="btn btn-primary" id="edit-order-btn">Edit Order</button>
+              ${order.status !== 'done' ? `<button class="btn btn-success" id="complete-order-btn">Mark as Complete</button>` : ''}
+              <button class="btn btn-danger" id="delete-order-btn">Delete Order</button>
+            </div>
+          </div>
+        `;
+        
+        // Add event listeners to buttons
+        document.getElementById('edit-order-btn').addEventListener('click', () => {
+          loadOrderForEdit(order.id);
+        });
+        
+        if (order.status !== 'done') {
+          document.getElementById('complete-order-btn').addEventListener('click', async () => {
+            try {
+              const updatedOrder = {
+                id: order.id,
+                status: 'done'
+              };
+              
+              const response = await fetch(API_CONFIG.getUrl(`/orders/${order.id}`), {
+                method: 'PUT',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(updatedOrder)
+              });
+              
+              if (!response.ok) {
+                throw new Error('Failed to update order status');
+              }
+              
+              // Reload order details
+              loadOrderDetails(order.id);
+              
+              // Reload orders list
+              loadAllOrders();
+              
+              showNotification('Order marked as complete', 'success');
+            } catch (error) {
+              console.error('Error updating order status:', error);
+              showNotification('Error: ' + error.message, 'error');
+            }
+          });
+        }
+        
+        document.getElementById('delete-order-btn').addEventListener('click', async () => {
+          if (confirm('Are you sure you want to delete this order? This action cannot be undone.')) {
+            try {
+              const response = await fetch(API_CONFIG.getUrl(`/orders/${order.id}`), {
+                method: 'DELETE'
+              });
+              
+              if (!response.ok) {
+                throw new Error('Failed to delete order');
+              }
+              
+              // Go back to orders tab
+              document.getElementById('orders-tab').click();
+              
+              // Reload orders list
+              loadAllOrders();
+              
+              showNotification('Order deleted successfully', 'success');
+            } catch (error) {
+              console.error('Error deleting order:', error);
+              showNotification('Error: ' + error.message, 'error');
+            }
+          }
+        });
+        
+      } catch (error) {
+        console.error('Error loading order details:', error);
+        const detailsContainer = document.getElementById('order-details-container');
+        detailsContainer.innerHTML = `<div class="error">Error loading order details: ${error.message}</div>`;
+      }
     }
     
     // Initial load
