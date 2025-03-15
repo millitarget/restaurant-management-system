@@ -1,4 +1,224 @@
-<!DOCTYPE html><html lang="pt"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Atendimento Telefónico</title><link rel="stylesheet" href="styles.css"><script src="api-config.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-client.js"></script><style>:root{--primary-color:#5D4037;--primary-light:#8D6E63;--primary-dark:#3E2723;--accent-color:#FF7043;--accent-light:#FF9E80;--accent-dark:#F4511E;--background-color:#EFEBE9;--card-color:#FFFFFF;--text-primary:#212121;--text-secondary:#757575;--text-light:#FFFFFF;--border-color:#D7CCC8;--shadow-color:rgba(0,0,0,0.1);--success-color:#43A047;--error-color:#E53935}body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background-color:var(--background-color);margin:0;padding:10px;overflow:hidden;height:100vh;box-sizing:border-box;color:var(--text-primary)}.container{display:grid;grid-template-columns:7fr 3fr;grid-template-rows:auto 1fr;gap:8px;height:100%;max-height:100%;padding-top:5px}.customer-section{grid-column:1;display:grid;grid-template-columns:2fr 3fr;gap:10px;background-color:var(--card-color);padding:8px 10px;border-radius:8px;box-shadow:0 1px 4px var(--shadow-color)}.customer-input{display:flex;align-items:center;gap:8px}.customer-input label{white-space:nowrap;font-size:.9rem;font-weight:500;color:var(--text-secondary);width:60px}.customer-input input{flex-grow:1;height:36px;box-sizing:border-box;border:1px solid var(--border-color);border-radius:6px;padding:0 12px;font-size:.95rem;transition:all .2s}.time-selection{display:flex;flex-direction:column;gap:5px}.time-selection-header{display:flex;gap:8px;align-items:center}.time-selection-header label{white-space:nowrap;font-size:.9rem;font-weight:500;color:var(--text-secondary);width:60px}.meal-period-buttons{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;flex-grow:1}.asap-btn,.meal-btn{background-color:var(--primary-light);color:var(--text-light);border:none;border-radius:6px;padding:5px 0;font-size:.85rem;font-weight:600;cursor:pointer;transition:all .2s;text-align:center}.asap-btn:hover,.meal-btn:hover{background-color:var(--primary-color)}.asap-btn.active,.meal-btn.active{background-color:var(--accent-color);box-shadow:0 2px 5px rgba(255,112,67,.3)}.time-picker-wrapper{display:flex;align-items:flex-start;gap:8px}.time-picker-label{white-space:nowrap;font-size:.9rem;font-weight:500;color:var(--text-secondary);width:60px;visibility:hidden}.time-picker-container{display:grid;grid-template-columns:1fr 1fr;gap:8px;flex-grow:1}.time-group{display:flex;flex-direction:column;gap:3px}.time-group-label{font-size:.75rem;color:var(--text-secondary);font-weight:500;text-align:center}.time-buttons-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:3px}.dinner-hours,.lunch-hours{display:none;grid-template-columns:repeat(4,1fr)}.time-btn{background-color:var(--background-color);border:1px solid var(--border-color);border-radius:4px;padding:4px 2px;font-size:.8rem;cursor:pointer;transition:all .2s;text-align:center;color:var(--text-primary)}.time-btn:hover{background-color:var(--primary-light);color:var(--text-light)}.time-btn.active{background-color:var(--accent-color);color:var(--text-light);border-color:var(--accent-dark)}.time-display{background-color:var(--accent-light);color:var(--text-light);padding:4px 8px;border-radius:4px;font-weight:500;text-align:center;font-size:.85rem;align-self:flex-end;margin-left:68px}.hour-btn,.minute-btn{font-size:.8rem;padding:4px 0}.categories{grid-column:1;display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:-2px}.category-btn{background-color:var(--primary-light);color:var(--text-light);border:none;border-radius:8px;padding:8px 5px;font-size:.95rem;cursor:pointer;transition:all .3s;text-align:center;height:36px;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px var(--shadow-color);font-weight:500}.category-btn:hover{background-color:var(--primary-color);transform:translateY(-2px);box-shadow:0 3px 6px var(--shadow-color)}.category-btn.active{background-color:var(--accent-color);box-shadow:0 2px 5px rgba(255,112,67,.3)}.items-section{grid-column:1;grid-row:3;display:flex;flex-direction:column;overflow:hidden;background-color:var(--card-color);padding:6px;border-radius:8px;box-shadow:0 1px 4px var(--shadow-color)}.items-grid{display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(4,1fr);gap:6px;overflow:hidden;flex-grow:1}.item-btn{background-color:var(--card-color);border:1px solid var(--border-color);border-radius:6px;padding:6px;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;position:relative;height:auto;font-size:.85rem;box-shadow:0 1px 2px var(--shadow-color)}.item-btn:hover{border-color:var(--accent-color);transform:translateY(-2px);box-shadow:0 4px 8px var(--shadow-color)}.item-name{font-weight:600;margin-bottom:5px;font-size:.85rem;line-height:1.2;color:var(--text-primary)}.item-note{font-size:.7rem;color:var(--text-secondary);margin-top:2px}.item-price{color:var(--accent-color);font-weight:600;position:absolute;bottom:6px;right:6px;font-size:.8rem}.pagination{display:flex;justify-content:center;gap:5px;margin-top:10px}.page-btn{background-color:var(--background-color);border:none;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.9rem;transition:all .2s;color:var(--text-secondary)}.page-btn:hover{background-color:var(--primary-light);color:var(--text-light)}.page-btn.active{background-color:var(--accent-color);color:var(--text-light);box-shadow:0 1px 3px rgba(255,112,67,.3)}.order-section{grid-column:2;grid-row:1/span 3;background-color:var(--card-color);border-left:1px solid var(--border-color);border-radius:10px;padding:10px;box-shadow:0 1px 4px var(--shadow-color);display:flex;flex-direction:column}.order-section h2{margin:0 0 10px 0;font-size:1.1rem;color:var(--primary-dark);border-bottom:2px solid var(--primary-light);padding-bottom:6px;text-align:center;font-weight:600}.cart-items{flex-grow:1;overflow-y:auto;margin-bottom:10px;border:1px solid var(--border-color);border-radius:6px;padding:4px;background-color:rgba(239,235,233,.3)}.cart-item{display:flex;justify-content:space-between;align-items:center;padding:6px;border-bottom:1px solid var(--border-color);font-size:.85rem;background-color:var(--card-color);border-radius:4px;margin-bottom:4px}.cart-item:last-child{margin-bottom:0}.item-info{flex-grow:1}.quantity-controls{display:flex;align-items:center}.quantity-btn{background-color:var(--background-color);border:none;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:700;font-size:.95rem;transition:all .2s;color:var(--text-primary)}.quantity-btn:hover{background-color:var(--primary-light);color:var(--text-light)}.quantity{margin:0 6px;font-weight:500;color:var(--primary-dark)}.total-section{border-top:2px solid var(--primary-light);padding-top:12px;margin-top:auto}.total-row{display:flex;justify-content:space-between;margin-bottom:15px;font-size:1.2rem;font-weight:500;color:var(--primary-dark)}.total-amount{font-weight:700;color:var(--accent-dark)}.send-order-btn{background-color:var(--success-color);color:var(--text-light);border:none;border-radius:6px;padding:10px;font-size:1rem;cursor:pointer;transition:all .3s;width:100%;font-weight:600;box-shadow:0 2px 5px rgba(67,160,71,.3);letter-spacing:.5px}.send-order-btn:hover{background-color:#2e7d32;transform:translateY(-2px);box-shadow:0 4px 8px rgba(67,160,71,.3)}.notification{position:fixed;top:20px;right:20px;padding:12px 24px;border-radius:8px;color:var(--text-light);z-index:1000;animation:fadeIn .3s,fadeOut .3s 2.7s;font-size:.95rem;box-shadow:0 3px 10px var(--shadow-color)}.notification-success{background-color:var(--success-color)}.notification-error{background-color:var(--error-color)}.form-group{display:flex;flex-direction:column;gap:6px;margin:0}.form-control{padding:6px 10px;border:1px solid var(--border-color);border-radius:6px;font-size:.95rem;flex-grow:1}.scheduled-time{color:var(--accent-color);font-size:.8rem;font-weight:600;margin-top:3px}input[type=datetime-local]{font-family:inherit;color:var(--text-primary);padding-right:10px}@keyframes fadeIn{from{opacity:0}to{opacity:1}}@keyframes fadeOut{from{opacity:1}to{opacity:0}}@media (max-height:700px){.item-btn{padding:6px}.items-grid{grid-template-rows:repeat(3,1fr)}}.time-indicator{position:absolute;top:10px;right:30%;font-weight:500;color:var(--primary-dark)}.back-link{position:fixed;top:10px;right:10px;background-color:var(--primary-dark);color:var(--text-light);text-decoration:none;padding:6px 12px;border-radius:6px;font-weight:500;font-size:.9rem;box-shadow:0 1px 3px var(--shadow-color);display:flex;align-items:center;gap:5px;z-index:100}.back-link:hover{background-color:var(--primary-light)}.customer-input .form-control:focus{border-color:var(--accent-color);box-shadow:0 0 0 2px rgba(255,112,67,.2);outline:0}.customer-section label{margin:0}</style></head><body><div class="container"><a href="index.html" class="back-link"><span style="font-size:1.2rem">⬅️</span> Menu</a><div class="customer-section"><div class="form-group customer-input"><label for="customer-name">Cliente:</label> <input type="text" id="customer-name" class="form-control" required placeholder="Nome do cliente"></div><div class="form-group time-selection"><div class="time-selection-header"><label>Entrega:</label><div class="meal-period-buttons"><button type="button" class="time-btn asap-btn active" id="asap-btn">AGORA</button> <button type="button" class="meal-btn" id="lunch-btn">Almoço</button> <button type="button" class="meal-btn" id="dinner-btn">Jantar</button></div></div><div class="time-picker-wrapper"><div class="time-picker-label">Hora:</div><div class="time-picker-container"><div class="time-group"><div class="time-group-label">Hora:</div><div class="time-buttons-grid lunch-hours" style="display:none"><button type="button" class="time-btn hour-btn" data-hour="11">11h</button> <button type="button" class="time-btn hour-btn" data-hour="12">12h</button> <button type="button" class="time-btn hour-btn" data-hour="13">13h</button> <button type="button" class="time-btn hour-btn" data-hour="14">14h</button></div><div class="time-buttons-grid dinner-hours" style="display:none"><button type="button" class="time-btn hour-btn" data-hour="18">18h</button> <button type="button" class="time-btn hour-btn" data-hour="19">19h</button> <button type="button" class="time-btn hour-btn" data-hour="20">20h</button> <button type="button" class="time-btn hour-btn" data-hour="21">21h</button></div></div><div class="time-group"><div class="time-group-label">Minutos:</div><div class="time-buttons-grid"><button type="button" class="time-btn minute-btn" data-minute="0">00</button> <button type="button" class="time-btn minute-btn" data-minute="10">10</button> <button type="button" class="time-btn minute-btn" data-minute="15">15</button> <button type="button" class="time-btn minute-btn" data-minute="20">20</button> <button type="button" class="time-btn minute-btn" data-minute="30">30</button> <button type="button" class="time-btn minute-btn" data-minute="40">40</button> <button type="button" class="time-btn minute-btn" data-minute="45">45</button> <button type="button" class="time-btn minute-btn" data-minute="50">50</button></div></div></div></div><div id="time-display" class="time-display">AGORA</div><input type="hidden" id="scheduled-time" class="form-control"> <span id="current-time" class="time-indicator"></span></div></div><div class="categories"><button class="category-btn" data-category="carne">Carne</button> <button class="category-btn" data-category="acompanhamentos">Acompanhamentos</button> <button class="category-btn" data-category="peixe">Peixe</button> <button class="category-btn" data-category="refrigerantes">Refrigerantes</button> <button class="category-btn" data-category="vinhos">Vinhos</button></div><div class="items-section"><div class="items-grid" id="items-container"></div><div class="pagination" id="pagination"></div></div><div class="order-section"><h2>Pedido Atual</h2><div class="cart-items" id="cart-items"></div><div class="total-section"><div class="total-row"><span>Total:</span> <span class="total-amount" id="total-amount">0.00€</span></div><button class="send-order-btn" id="send-order-btn">Enviar Pedido</button></div></div></div><script>let menuData={carne:[{name:"1 Frango do Churrasco",price:7.9},{name:"1/2 Frango do Churrasco",price:4.5},{name:"1/2 Frango do Churrasco *",price:8,note:"30-40 min"},{name:"1 Espetada Guia",price:6.5},{name:"1 Espetada Frango c/ Bacon",price:6.5},{name:"1 Dose Entrecosto",price:8},{name:"1/2 Dose Entrecosto",price:4.5},{name:"1 Salsicha Toscana",price:2},{name:"1 Févera de Porco",price:6},{name:"1 Costeleta Vitela",price:25,priceType:"kg"},{name:"1 Costeleta Porco",price:6},{name:"1 Coelho*",price:12.5,note:"30-40 min"},{name:"Costelinha",price:19,priceType:"kg"},{name:"Picanha",price:36.5,priceType:"kg"},{name:"1 Bife do Frango",price:6},{name:"Bife do Lombo",price:40,priceType:"kg"}],acompanhamentos:[{name:"1 Dose Batata Frita",price:3.75},{name:"1 Dose Batata Frita Barrosa",price:2.5},{name:"1 Dose Arroz",price:3.75},{name:"1/2 Dose Arroz",price:2.5},{name:"1 Salada Mista",price:4},{name:"1/2 Salada Mista",price:2.75},{name:"1 Salada Tomate",price:4},{name:"1 Salada Alface",price:4},{name:"1 Dose Feijão Preto",price:5.75},{name:"1/2 Dose Feijão Preto",price:3.95},{name:"1 Esparregado Grelos",price:5.5},{name:"1 Broa de Milho",price:1.9},{name:"1/2 Broa de Milho",price:1},{name:"1 Broa de Avintes",price:3.5},{name:"1/2 Broa de Avintes",price:2},{name:"1 Trança (Caceté)",price:1.8}],peixe:[{name:"Bacalhau (1 Pessoa)",price:19.5,note:"40 min"},{name:"Bacalhau (2 Pessoas)",price:32.5,note:"40 min"}],refrigerantes:[{name:"Refrigerantes 1L",price:2.75},{name:"Refrigerantes 1.5L",price:3}],vinhos:[{name:"Vinho Casa (B/T)",price:4,note:"Verdes 0.75cl"},{name:"V. Branco Muralhas",price:7,note:"Verdes 0.75cl"},{name:"V. Branco Casal Garcia",price:7,note:"Verdes 0.75cl"},{name:"V. Porta Ravessa (B/T)",price:4.5,note:"Maduros 0.75cl"},{name:"V. Gasificado Castiço",price:5.5,note:"Maduros 0.75cl"},{name:"V. Monte Velho Tinto",price:7,note:"Maduros 0.75cl"},{name:"V. Eugénio Almeida T",price:7,note:"Maduros 0.75cl"}]},categoriesButtons=document.querySelectorAll(".category-btn"),itemsContainer=document.getElementById("items-container"),paginationContainer=document.getElementById("pagination"),cartItemsContainer=document.getElementById("cart-items"),totalAmountElement=document.getElementById("total-amount"),customerNameInput=document.getElementById("customer-name"),scheduledTimeInput=document.getElementById("scheduled-time"),timeDisplay=document.getElementById("time-display"),asapButton=document.getElementById("asap-btn"),lunchButton=document.getElementById("lunch-btn"),dinnerButton=document.getElementById("dinner-btn"),lunchHours=document.querySelector(".lunch-hours"),dinnerHours=document.querySelector(".dinner-hours"),hourButtons=document.querySelectorAll(".hour-btn"),minuteButtons=document.querySelectorAll(".minute-btn"),sendOrderButton=document.getElementById("send-order-btn"),currentTimeEl=document.getElementById("current-time"),cart=[],total=0,currentCategory="",currentPage=0,itemsPerPage=16,isAsap=!0,selectedHour=null,selectedMinute=null,selectedMealPeriod=null;function updateClock(){var e=new Date;currentTimeEl.textContent=e.toLocaleTimeString()}function selectMealPeriod(e){isAsap=!1,asapButton.classList.remove("active"),resetTimeSelections(!0),selectedMealPeriod=e,lunchButton.classList.toggle("active","lunch"===e),dinnerButton.classList.toggle("active","dinner"===e),lunchHours.style.display="lunch"===e?"grid":"none",dinnerHours.style.display="dinner"===e?"grid":"none",selectedHour||(e=("lunch"===e?lunchHours:dinnerHours).querySelector(".hour-btn"))&&e.click()}function resetTimeSelections(e=!1){hourButtons.forEach(e=>e.classList.remove("active")),minuteButtons.forEach(e=>e.classList.remove("active")),selectedHour=null,selectedMinute=null,e||(selectedMealPeriod=null,lunchButton.classList.remove("active"),dinnerButton.classList.remove("active"),lunchHours.style.display="none",dinnerHours.style.display="none")}function updateTimeDisplay(){var e,t;isAsap?(timeDisplay.textContent="AGORA",scheduledTimeInput.value=""):null!==selectedHour&&(e=null!==selectedMinute?":"+selectedMinute.toString().padStart(2,"0"):":00",timeDisplay.textContent=selectedHour+e,e=new Date,(t=new Date(e.getFullYear(),e.getMonth(),e.getDate(),selectedHour,null!==selectedMinute?selectedMinute:0))<e&&t.setDate(t.getDate()+1),scheduledTimeInput.value=formatDateTimeForBackend(t))}function formatDateTimeForBackend(e){return e.getFullYear()+`-${(e.getMonth()+1).toString().padStart(2,"0")}-${e.getDate().toString().padStart(2,"0")}T${e.getHours().toString().padStart(2,"0")}:`+e.getMinutes().toString().padStart(2,"0")}function displayItems(a,e=0){if(itemsContainer.innerHTML="",menuData[a]){var t=menuData[a].length,n=Math.ceil(t/itemsPerPage),i=e*itemsPerPage,o=Math.min(i+itemsPerPage,t);for(let n=i;n<o;n++){let e=menuData[a][n];var r=document.createElement("button"),c=(r.className="item-btn","kg"===e.priceType?e.price.toFixed(2)+"€/kg":e.price.toFixed(2)+"€");let t="";e.note&&(t=`<div class="item-note">${e.note}</div>`),r.innerHTML=`
+<!DOCTYPE html><html lang="pt"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Atendimento Telefónico</title><link rel="stylesheet" href="styles.css"><script src="api-config.js"></script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-client.js"></script><style>:root{--primary-color:#5D4037;--primary-light:#8D6E63;--primary-dark:#3E2723;--accent-color:#FF7043;--accent-light:#FF9E80;--accent-dark:#F4511E;--background-color:#EFEBE9;--card-color:#FFFFFF;--text-primary:#212121;--text-secondary:#757575;--text-light:#FFFFFF;--border-color:#D7CCC8;--shadow-color:rgba(0,0,0,0.1);--success-color:#43A047;--error-color:#E53935}body{font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;background-color:var(--background-color);margin:0;padding:10px;overflow-y:auto;height:100vh;box-sizing:border-box;color:var(--text-primary)}.container{display:grid;grid-template-columns:7fr 3fr;grid-template-rows:auto auto 1fr;gap:8px;height:100%;max-height:100%;padding-top:5px}.customer-section{grid-column:1;display:grid;grid-template-columns:2fr 3fr;gap:10px;background-color:var(--card-color);padding:8px 10px;border-radius:8px;box-shadow:0 1px 4px var(--shadow-color)}.customer-input{display:flex;align-items:center;gap:8px}.customer-input label{white-space:nowrap;font-size:.9rem;font-weight:500;color:var(--text-secondary);width:60px}.customer-input input{flex-grow:1;height:36px;box-sizing:border-box;border:1px solid var(--border-color);border-radius:6px;padding:0 12px;font-size:.95rem;transition:all .2s}.time-selection{display:flex;flex-direction:column;gap:5px}.time-selection-header{display:flex;gap:8px;align-items:center}.time-selection-header label{white-space:nowrap;font-size:.9rem;font-weight:500;color:var(--text-secondary);width:60px}.meal-period-buttons{display:grid;grid-template-columns:repeat(3,1fr);gap:5px;flex-grow:1}.asap-btn,.meal-btn{background-color:var(--primary-light);color:var(--text-light);border:none;border-radius:6px;padding:5px 0;font-size:.85rem;font-weight:600;cursor:pointer;transition:all .2s;text-align:center}.asap-btn:hover,.meal-btn:hover{background-color:var(--primary-color)}.asap-btn.active,.meal-btn.active{background-color:var(--accent-color);box-shadow:0 2px 5px rgba(255,112,67,.3)}.time-picker-wrapper{display:flex;align-items:flex-start;gap:8px}.time-picker-label{white-space:nowrap;font-size:.9rem;font-weight:500;color:var(--text-secondary);width:60px;visibility:hidden}.time-picker-container{display:grid;grid-template-columns:1fr 1fr;gap:8px;flex-grow:1}.time-group{display:flex;flex-direction:column;gap:3px}.time-group-label{font-size:.75rem;color:var(--text-secondary);font-weight:500;text-align:center}.time-buttons-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:3px}.dinner-hours,.lunch-hours{display:none;grid-template-columns:repeat(4,1fr)}.time-btn{background-color:var(--background-color);border:1px solid var(--border-color);border-radius:4px;padding:4px 2px;font-size:.8rem;cursor:pointer;transition:all .2s;text-align:center;color:var(--text-primary)}.time-btn:hover{background-color:var(--primary-light);color:var(--text-light)}.time-btn.active{background-color:var(--accent-color);color:var(--text-light);border-color:var(--accent-dark)}.time-display{background-color:var(--accent-light);color:var(--text-light);padding:4px 8px;border-radius:4px;font-weight:500;text-align:center;font-size:.85rem;align-self:flex-end;margin-left:68px}.hour-btn,.minute-btn{font-size:.8rem;padding:4px 0}.categories{grid-column:1;display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:-2px}.category-btn{background-color:var(--primary-light);color:var(--text-light);border:none;border-radius:8px;padding:8px 5px;font-size:.95rem;cursor:pointer;transition:all .3s;text-align:center;height:36px;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 3px var(--shadow-color);font-weight:500}.category-btn:hover{background-color:var(--primary-color);transform:translateY(-2px);box-shadow:0 3px 6px var(--shadow-color)}.category-btn.active{background-color:var(--accent-color);box-shadow:0 2px 5px rgba(255,112,67,.3)}.items-section{grid-column:1;grid-row:3;display:flex;flex-direction:column;overflow:hidden;background-color:var(--card-color);padding:6px;border-radius:8px;box-shadow:0 1px 4px var(--shadow-color)}.items-grid{display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(4,1fr);gap:6px;overflow:hidden;flex-grow:1}.item-btn{background-color:var(--card-color);border:1px solid var(--border-color);border-radius:6px;padding:6px;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;position:relative;height:auto;font-size:.85rem;box-shadow:0 1px 2px var(--shadow-color)}.item-btn:hover{border-color:var(--accent-color);transform:translateY(-2px);box-shadow:0 4px 8px var(--shadow-color)}.item-name{font-weight:600;margin-bottom:5px;font-size:.85rem;line-height:1.2;color:var(--text-primary)}.item-note{font-size:.7rem;color:var(--text-secondary);margin-top:2px}.item-price{color:var(--accent-color);font-weight:600;position:absolute;bottom:6px;right:6px;font-size:.8rem}.pagination{display:flex;justify-content:center;gap:5px;margin-top:10px}.page-btn{background-color:var(--background-color);border:none;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.9rem;transition:all .2s;color:var(--text-secondary)}.page-btn:hover{background-color:var(--primary-light);color:var(--text-light)}.page-btn.active{background-color:var(--accent-color);color:var(--text-light);box-shadow:0 1px 3px rgba(255,112,67,.3)}.order-section{grid-column:2;grid-row:1/span 3;background-color:var(--card-color);border-left:1px solid var(--border-color);border-radius:10px;padding:10px;box-shadow:0 1px 4px var(--shadow-color);display:flex;flex-direction:column}.order-section h2{margin:0 0 10px 0;font-size:1.1rem;color:var(--primary-dark);border-bottom:2px solid var(--primary-light);padding-bottom:6px;text-align:center;font-weight:600}.cart-items{flex-grow:1;overflow-y:auto;margin-bottom:10px;border:1px solid var(--border-color);border-radius:6px;padding:4px;background-color:rgba(239,235,233,.3)}.cart-item{display:flex;justify-content:space-between;align-items:center;padding:6px;border-bottom:1px solid var(--border-color);font-size:.85rem;background-color:var(--card-color);border-radius:4px;margin-bottom:4px}.cart-item:last-child{margin-bottom:0}.item-info{flex-grow:1}.quantity-controls{display:flex;align-items:center}.quantity-btn{background-color:var(--background-color);border:none;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:700;font-size:.95rem;transition:all .2s;color:var(--text-primary)}.quantity-btn:hover{background-color:var(--primary-light);color:var(--text-light)}.quantity{margin:0 6px;font-weight:500;color:var(--primary-dark)}.total-section{border-top:2px solid var(--primary-light);padding-top:12px;margin-top:auto}.total-row{display:flex;justify-content:space-between;margin-bottom:15px;font-size:1.2rem;font-weight:500;color:var(--primary-dark)}.total-amount{font-weight:700;color:var(--accent-dark)}.send-order-btn{background-color:var(--success-color);color:var(--text-light);border:none;border-radius:6px;padding:10px;font-size:1rem;cursor:pointer;transition:all .3s;width:100%;font-weight:600;box-shadow:0 2px 5px rgba(67,160,71,.3);letter-spacing:.5px}.send-order-btn:hover{background-color:#2e7d32;transform:translateY(-2px);box-shadow:0 4px 8px rgba(67,160,71,.3)}.notification{position:fixed;top:20px;right:20px;padding:12px 24px;border-radius:8px;color:var(--text-light);z-index:1000;animation:fadeIn .3s,fadeOut .3s 2.7s;font-size:.95rem;box-shadow:0 3px 10px var(--shadow-color)}.notification-success{background-color:var(--success-color)}.notification-error{background-color:var(--error-color)}.form-group{display:flex;flex-direction:column;gap:6px;margin:0}.form-control{padding:6px 10px;border:1px solid var(--border-color);border-radius:6px;font-size:.95rem;flex-grow:1}.scheduled-time{color:var(--accent-color);font-size:.8rem;font-weight:600;margin-top:3px}input[type=datetime-local]{font-family:inherit;color:var(--text-primary);padding-right:10px}@keyframes fadeIn{from{opacity:0}to{opacity:1}}@keyframes fadeOut{from{opacity:1}to{opacity:0}}@media (max-height:700px){.item-btn{padding:6px}.items-grid{grid-template-rows:repeat(3,1fr)}}.time-indicator{position:absolute;top:10px;right:30%;font-weight:500;color:var(--primary-dark)}.back-link{position:fixed;top:10px;right:10px;background-color:var(--primary-dark);color:var(--text-light);text-decoration:none;padding:6px 12px;border-radius:6px;font-weight:500;font-size:.9rem;box-shadow:0 1px 3px var(--shadow-color);display:flex;align-items:center;gap:5px;z-index:100}.back-link:hover{background-color:var(--primary-light)}.customer-input .form-control:focus{border-color:var(--accent-color);box-shadow:0 0 0 2px rgba(255,112,67,.2);outline:0}.customer-section label{margin:0}
+
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+    body {
+        padding: 5px;
+        height: auto;
+        min-height: 100vh;
+    }
+    
+    .container {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto 1fr auto;
+        height: auto;
+        overflow-y: visible;
+    }
+    
+    .back-link {
+        position: static;
+        margin-bottom: 10px;
+        display: inline-flex;
+    }
+    
+    .customer-section {
+        grid-column: 1;
+        grid-row: 2;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .customer-input {
+        width: 100%;
+    }
+    
+    .time-selection {
+        width: 100%;
+    }
+    
+    .time-selection-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .meal-period-buttons {
+        width: 100%;
+    }
+    
+    .time-picker-wrapper {
+        width: 100%;
+        flex-direction: column;
+    }
+    
+    .time-picker-container {
+        width: 100%;
+    }
+    
+    .time-display {
+        margin-left: 0;
+        align-self: center;
+        width: 80%;
+        max-width: 200px;
+    }
+    
+    .categories {
+        grid-column: 1;
+        grid-row: 3;
+        grid-template-columns: repeat(2, 1fr);
+        grid-template-rows: repeat(3, auto);
+        gap: 8px;
+        margin: 10px 0;
+    }
+    
+    .category-btn {
+        height: 45px;
+        font-size: 0.9rem;
+        padding: 8px 5px;
+    }
+    
+    .items-section {
+        grid-column: 1;
+        grid-row: 4;
+        max-height: 50vh;
+        overflow-y: auto;
+    }
+    
+    .items-grid {
+        grid-template-columns: repeat(2, 1fr);
+        grid-template-rows: auto;
+    }
+    
+    .item-btn {
+        height: 80px;
+        position: relative;
+        padding: 8px 6px;
+    }
+    
+    .item-name {
+        font-size: 0.8rem;
+        margin-bottom: 15px;
+    }
+    
+    .item-price {
+        font-size: 0.9rem;
+    }
+    
+    .order-section {
+        grid-column: 1;
+        grid-row: 5;
+        border-left: none;
+        border-top: 1px solid var(--border-color);
+        margin-top: 10px;
+        max-height: 40vh;
+    }
+    
+    .cart-items {
+        max-height: 30vh;
+    }
+    
+    .cart-item {
+        flex-wrap: wrap;
+    }
+    
+    .item-info {
+        width: 100%;
+        margin-bottom: 5px;
+    }
+    
+    .quantity-controls {
+        margin-left: auto;
+    }
+    
+    .quantity-btn {
+        width: 35px;
+        height: 35px;
+    }
+    
+    .send-order-btn {
+        height: 50px;
+        font-size: 1.1rem;
+    }
+    
+    /* Button size adjustments for touchscreens */
+    .time-btn, .hour-btn, .minute-btn {
+        padding: 8px 4px;
+        font-size: 0.9rem;
+    }
+    
+    .page-btn {
+        width: 35px;
+        height: 35px;
+    }
+    
+    /* Improved notification positioning for mobile */
+    .notification {
+        top: auto;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 90%;
+        max-width: 400px;
+        text-align: center;
+        right: auto;
+        padding: 15px;
+    }
+    
+    /* Add mobile view toggle for order section */
+    .mobile-cart-toggle {
+        display: block;
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 60px;
+        height: 60px;
+        border-radius: 50%;
+        background-color: var(--accent-color);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+        z-index: 100;
+    }
+    
+    .mobile-cart-badge {
+        position: absolute;
+        top: 0;
+        right: 0;
+        background-color: var(--error-color);
+        color: white;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        font-size: 0.8rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    /* Compact time selection for mobile */
+    @media (max-width: 480px) {
+        .time-buttons-grid {
+            grid-template-columns: repeat(4, 1fr);
+        }
+        
+        .items-grid {
+            grid-template-columns: 1fr;
+        }
+        
+        .item-btn {
+            height: auto;
+            padding: 12px 8px;
+        }
+        
+        .categories {
+            grid-template-columns: 1fr;
+        }
+    }
+}
+</style></head><body><div class="container"><a href="index.html" class="back-link"><span style="font-size:1.2rem">⬅️</span> Menu</a><div class="customer-section"><div class="form-group customer-input"><label for="customer-name">Cliente:</label> <input type="text" id="customer-name" class="form-control" required placeholder="Nome do cliente"></div><div class="form-group time-selection"><div class="time-selection-header"><label>Entrega:</label><div class="meal-period-buttons"><button type="button" class="time-btn asap-btn active" id="asap-btn">AGORA</button> <button type="button" class="meal-btn" id="lunch-btn">Almoço</button> <button type="button" class="meal-btn" id="dinner-btn">Jantar</button></div></div><div class="time-picker-wrapper"><div class="time-picker-label">Hora:</div><div class="time-picker-container"><div class="time-group"><div class="time-group-label">Hora:</div><div class="time-buttons-grid lunch-hours" style="display:none"><button type="button" class="time-btn hour-btn" data-hour="11">11h</button> <button type="button" class="time-btn hour-btn" data-hour="12">12h</button> <button type="button" class="time-btn hour-btn" data-hour="13">13h</button> <button type="button" class="time-btn hour-btn" data-hour="14">14h</button></div><div class="time-buttons-grid dinner-hours" style="display:none"><button type="button" class="time-btn hour-btn" data-hour="18">18h</button> <button type="button" class="time-btn hour-btn" data-hour="19">19h</button> <button type="button" class="time-btn hour-btn" data-hour="20">20h</button> <button type="button" class="time-btn hour-btn" data-hour="21">21h</button></div></div><div class="time-group"><div class="time-group-label">Minutos:</div><div class="time-buttons-grid"><button type="button" class="time-btn minute-btn" data-minute="0">00</button> <button type="button" class="time-btn minute-btn" data-minute="10">10</button> <button type="button" class="time-btn minute-btn" data-minute="15">15</button> <button type="button" class="time-btn minute-btn" data-minute="20">20</button> <button type="button" class="time-btn minute-btn" data-minute="30">30</button> <button type="button" class="time-btn minute-btn" data-minute="40">40</button> <button type="button" class="time-btn minute-btn" data-minute="45">45</button> <button type="button" class="time-btn minute-btn" data-minute="50">50</button></div></div></div></div><div id="time-display" class="time-display">AGORA</div><input type="hidden" id="scheduled-time" class="form-control"> <span id="current-time" class="time-indicator"></span></div></div><div class="categories"><button class="category-btn" data-category="carne">Carne</button> <button class="category-btn" data-category="acompanhamentos">Acompanhamentos</button> <button class="category-btn" data-category="peixe">Peixe</button> <button class="category-btn" data-category="refrigerantes">Refrigerantes</button> <button class="category-btn" data-category="vinhos">Vinhos</button></div><div class="items-section"><div class="items-grid" id="items-container"></div><div class="pagination" id="pagination"></div></div><div class="order-section"><h2>Pedido Atual</h2><div class="cart-items" id="cart-items"></div><div class="total-section"><div class="total-row"><span>Total:</span> <span class="total-amount" id="total-amount">0.00€</span></div><button class="send-order-btn" id="send-order-btn">Enviar Pedido</button></div></div></div><div class="mobile-cart-toggle" id="mobile-cart-toggle" style="display: none;">🛒<div class="mobile-cart-badge" id="mobile-cart-badge">0</div></div></div><script>let menuData={carne:[{name:"1 Frango do Churrasco",price:7.9},{name:"1/2 Frango do Churrasco",price:4.5},{name:"1/2 Frango do Churrasco *",price:8,note:"30-40 min"},{name:"1 Espetada Guia",price:6.5},{name:"1 Espetada Frango c/ Bacon",price:6.5},{name:"1 Dose Entrecosto",price:8},{name:"1/2 Dose Entrecosto",price:4.5},{name:"1 Salsicha Toscana",price:2},{name:"1 Févera de Porco",price:6},{name:"1 Costeleta Vitela",price:25,priceType:"kg"},{name:"1 Costeleta Porco",price:6},{name:"1 Coelho*",price:12.5,note:"30-40 min"},{name:"Costelinha",price:19,priceType:"kg"},{name:"Picanha",price:36.5,priceType:"kg"},{name:"1 Bife do Frango",price:6},{name:"Bife do Lombo",price:40,priceType:"kg"}],acompanhamentos:[{name:"1 Dose Batata Frita",price:3.75},{name:"1 Dose Batata Frita Barrosa",price:2.5},{name:"1 Dose Arroz",price:3.75},{name:"1/2 Dose Arroz",price:2.5},{name:"1 Salada Mista",price:4},{name:"1/2 Salada Mista",price:2.75},{name:"1 Salada Tomate",price:4},{name:"1 Salada Alface",price:4},{name:"1 Dose Feijão Preto",price:5.75},{name:"1/2 Dose Feijão Preto",price:3.95},{name:"1 Esparregado Grelos",price:5.5},{name:"1 Broa de Milho",price:1.9},{name:"1/2 Broa de Milho",price:1},{name:"1 Broa de Avintes",price:3.5},{name:"1/2 Broa de Avintes",price:2},{name:"1 Trança (Caceté)",price:1.8}],peixe:[{name:"Bacalhau (1 Pessoa)",price:19.5,note:"40 min"},{name:"Bacalhau (2 Pessoas)",price:32.5,note:"40 min"}],refrigerantes:[{name:"Refrigerantes 1L",price:2.75},{name:"Refrigerantes 1.5L",price:3}],vinhos:[{name:"Vinho Casa (B/T)",price:4,note:"Verdes 0.75cl"},{name:"V. Branco Muralhas",price:7,note:"Verdes 0.75cl"},{name:"V. Branco Casal Garcia",price:7,note:"Verdes 0.75cl"},{name:"V. Porta Ravessa (B/T)",price:4.5,note:"Maduros 0.75cl"},{name:"V. Gasificado Castiço",price:5.5,note:"Maduros 0.75cl"},{name:"V. Monte Velho Tinto",price:7,note:"Maduros 0.75cl"},{name:"V. Eugénio Almeida T",price:7,note:"Maduros 0.75cl"}]},categoriesButtons=document.querySelectorAll(".category-btn"),itemsContainer=document.getElementById("items-container"),paginationContainer=document.getElementById("pagination"),cartItemsContainer=document.getElementById("cart-items"),totalAmountElement=document.getElementById("total-amount"),customerNameInput=document.getElementById("customer-name"),scheduledTimeInput=document.getElementById("scheduled-time"),timeDisplay=document.getElementById("time-display"),asapButton=document.getElementById("asap-btn"),lunchButton=document.getElementById("lunch-btn"),dinnerButton=document.getElementById("dinner-btn"),lunchHours=document.querySelector(".lunch-hours"),dinnerHours=document.querySelector(".dinner-hours"),hourButtons=document.querySelectorAll(".hour-btn"),minuteButtons=document.querySelectorAll(".minute-btn"),sendOrderButton=document.getElementById("send-order-btn"),currentTimeEl=document.getElementById("current-time"),cart=[],total=0,currentCategory="",currentPage=0,itemsPerPage=16,isAsap=!0,selectedHour=null,selectedMinute=null,selectedMealPeriod=null;function updateClock(){var e=new Date;currentTimeEl.textContent=e.toLocaleTimeString()}function selectMealPeriod(e){isAsap=!1,asapButton.classList.remove("active"),resetTimeSelections(!0),selectedMealPeriod=e,lunchButton.classList.toggle("active","lunch"===e),dinnerButton.classList.toggle("active","dinner"===e),lunchHours.style.display="lunch"===e?"grid":"none",dinnerHours.style.display="dinner"===e?"grid":"none",selectedHour||(e=("lunch"===e?lunchHours:dinnerHours).querySelector(".hour-btn"))&&e.click()}function resetTimeSelections(e=!1){hourButtons.forEach(e=>e.classList.remove("active")),minuteButtons.forEach(e=>e.classList.remove("active")),selectedHour=null,selectedMinute=null,e||(selectedMealPeriod=null,lunchButton.classList.remove("active"),dinnerButton.classList.remove("active"),lunchHours.style.display="none",dinnerHours.style.display="none")}function updateTimeDisplay(){var e,t;isAsap?(timeDisplay.textContent="AGORA",scheduledTimeInput.value=""):null!==selectedHour&&(e=null!==selectedMinute?":"+selectedMinute.toString().padStart(2,"0"):":00",timeDisplay.textContent=selectedHour+e,e=new Date,(t=new Date(e.getFullYear(),e.getMonth(),e.getDate(),selectedHour,null!==selectedMinute?selectedMinute:0))<e&&t.setDate(t.getDate()+1),scheduledTimeInput.value=formatDateTimeForBackend(t))}function formatDateTimeForBackend(e){return e.getFullYear()+`-${(e.getMonth()+1).toString().padStart(2,"0")}-${e.getDate().toString().padStart(2,"0")}T${e.getHours().toString().padStart(2,"0")}:`+e.getMinutes().toString().padStart(2,"0")}function displayItems(a,e=0){if(itemsContainer.innerHTML="",menuData[a]){var t=menuData[a].length,n=Math.ceil(t/itemsPerPage),i=e*itemsPerPage,o=Math.min(i+itemsPerPage,t);for(let n=i;n<o;n++){let e=menuData[a][n];var r=document.createElement("button"),c=(r.className="item-btn","kg"===e.priceType?e.price.toFixed(2)+"€/kg":e.price.toFixed(2)+"€");let t="";e.note&&(t=`<div class="item-note">${e.note}</div>`),r.innerHTML=`
           <div class="item-name">${e.name}</div>
           ${t}
           <div class="item-price">${c}</div>
@@ -53,4 +273,88 @@ customerNameInput.focus();
 }catch(e){
     console.error("Order submission error:", e);
     showNotification("Erro: "+e.message,"error");
-}else showNotification("Por favor, insira o nome do cliente","error")}),document.addEventListener("keydown",e=>{var t;"1"<=e.key&&e.key<="5"&&(t=parseInt(e.key)-1)<categoriesButtons.length&&categoriesButtons[t].click(),"Enter"===e.key&&(document.activeElement===customerNameInput||document.activeElement===scheduledTimeInput)&&0<cart.length&&sendOrderButton.click()}),categoriesButtons[0].click(),customerNameInput.focus()</script></body></html>
+}else showNotification("Por favor, insira o nome do cliente","error")}),document.addEventListener("keydown",e=>{var t;"1"<=e.key&&e.key<="5"&&(t=parseInt(e.key)-1)<categoriesButtons.length&&categoriesButtons[t].click(),"Enter"===e.key&&(document.activeElement===customerNameInput||document.activeElement===scheduledTimeInput)&&0<cart.length&&sendOrderButton.click()}),categoriesButtons[0].click(),customerNameInput.focus()
+
+// Add mobile enhancement code at the end of your script
+function setupMobileEnhancements() {
+    // Only setup mobile enhancements if we're on a mobile device
+    if (window.innerWidth <= 768) {
+        const mobileCartToggle = document.createElement('div');
+        mobileCartToggle.className = 'mobile-cart-toggle';
+        mobileCartToggle.id = 'mobile-cart-toggle';
+        mobileCartToggle.innerHTML = '🛒<div class="mobile-cart-badge" id="mobile-cart-badge">0</div>';
+        document.body.appendChild(mobileCartToggle);
+        
+        const cartBadge = document.getElementById('mobile-cart-badge');
+        const orderSection = document.querySelector('.order-section');
+        
+        // Initial state - hide order section on mobile
+        if (window.innerWidth <= 768 && cart.length === 0) {
+            orderSection.style.display = 'none';
+        }
+        
+        // Toggle order section visibility when cart button is clicked
+        mobileCartToggle.addEventListener('click', () => {
+            if (orderSection.style.display === 'none') {
+                orderSection.style.display = 'flex';
+                // Scroll to order section
+                orderSection.scrollIntoView({ behavior: 'smooth' });
+            } else {
+                orderSection.style.display = 'none';
+            }
+        });
+        
+        // Update the cart count badge
+        function updateCartBadge() {
+            let totalItems = 0;
+            cart.forEach(item => {
+                totalItems += item.quantity;
+            });
+            
+            cartBadge.textContent = totalItems;
+            
+            // Show/hide toggle button based on cart contents
+            if (totalItems > 0) {
+                mobileCartToggle.style.display = 'flex';
+            } else {
+                mobileCartToggle.style.display = 'none';
+            }
+            
+            // On mobile, auto-show order section when items are added
+            if (window.innerWidth <= 768) {
+                if (totalItems > 0) {
+                    orderSection.style.display = 'flex';
+                } else {
+                    orderSection.style.display = 'none';
+                }
+            }
+        }
+        
+        // Override the updateCartDisplay function to include badge updates
+        const originalUpdateCartDisplay = updateCartDisplay;
+        updateCartDisplay = function() {
+            originalUpdateCartDisplay();
+            updateCartBadge();
+        };
+        
+        // Initialize
+        updateCartBadge();
+    }
+}
+
+// Call setup when the page loads
+window.addEventListener('DOMContentLoaded', setupMobileEnhancements);
+
+// Update mobile layout on resize
+window.addEventListener('resize', () => {
+    if (window.innerWidth <= 768) {
+        setupMobileEnhancements();
+    } else {
+        const mobileCartToggle = document.getElementById('mobile-cart-toggle');
+        if (mobileCartToggle) {
+            mobileCartToggle.style.display = 'none';
+        }
+        document.querySelector('.order-section').style.display = 'flex';
+    }
+});
+</script></body></html>
