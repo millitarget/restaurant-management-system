@@ -338,10 +338,11 @@
     
     .order-detail-card {
       background-color: white;
-      border-radius: 10px;
-      padding: 20px;
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      margin-bottom: 20px;
+      border-radius: 8px;
+      padding: 15px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      margin-bottom: 15px;
+      max-width: 100%;
     }
     
     .detail-header {
@@ -511,6 +512,21 @@
       color: white;
       border-color: #673AB7;
       box-shadow: 0 2px 5px rgba(103, 58, 183, 0.3);
+    }
+    
+    .whatsapp-source {
+      display: inline-flex;
+      align-items: center;
+      background-color: #25D366;
+      color: white;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+    
+    .whatsapp-source::before {
+      content: "📱";
+      margin-right: 4px;
     }
   </style>
 </head>
@@ -811,7 +827,8 @@
       });
       
       // Add "Now" filter for walk-in and unscheduled orders
-      if (orders.some(order => order.source === 'walk-in' || !order.scheduled_at)) {
+      if (orders.some(order => order.source === 'walk-in' || 
+          (order.source === 'phone' || order.source === 'online' || order.source === 'whatsapp') && !order.scheduled_at)) {
         const nowButton = document.createElement('button');
         nowButton.className = 'filter-btn';
         nowButton.textContent = 'ASAP / Now';
@@ -882,7 +899,7 @@
         // Filter for walk-in and unscheduled orders
         const filteredOrders = allOrders.filter(order => 
           order.source === 'walk-in' || 
-          ((order.source === 'phone' || order.source === 'online') && !order.scheduled_at)
+          ((order.source === 'phone' || order.source === 'online' || order.source === 'whatsapp') && !order.scheduled_at)
         );
         displayOrders(filteredOrders);
       } else {
@@ -955,7 +972,7 @@
       orders.forEach(order => {
         // Check if it's a walk-in order or a phone/online order without scheduled time
         if (order.source === 'walk-in' || 
-            ((order.source === 'phone' || order.source === 'online') && !order.scheduled_at)) {
+            ((order.source === 'phone' || order.source === 'online' || order.source === 'whatsapp') && !order.scheduled_at)) {
           console.log(`Adding ${order.source} order to cashier orders: ${order.id}`);
           cashierOrders.push(order);
         } else if (order.scheduled_at) {
@@ -1086,7 +1103,13 @@
       // Order source
       const orderSource = document.createElement('div');
       orderSource.className = 'order-source';
-      orderSource.textContent = `Source: ${order.source}`;
+      
+      // Add WhatsApp icon for WhatsApp orders
+      if (order.source === 'whatsapp') {
+        orderSource.innerHTML = `Source: <span class="whatsapp-source">WhatsApp</span>`;
+      } else {
+        orderSource.textContent = `Source: ${order.source}`;
+      }
       orderDetails.appendChild(orderSource);
       
       // Order time
