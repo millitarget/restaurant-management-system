@@ -6,6 +6,7 @@ const { createClient } = require('@supabase/supabase-js');
 // Import routes
 const ordersRoutes = require('./routes/orders');
 const stationsRoutes = require('./routes/stations');
+const whatsappRoutes = require('./routes/whatsapp');
 
 // Create Express app
 const app = express();
@@ -43,6 +44,8 @@ app.use('/orders', ordersRoutes);
 app.use('/api/orders', ordersRoutes);
 app.use('/stations', stationsRoutes);
 app.use('/api/stations', stationsRoutes);
+app.use('/whatsapp', whatsappRoutes);
+app.use('/api/whatsapp', whatsappRoutes);
 
 // Home route
 app.get('/', (req, res) => {
