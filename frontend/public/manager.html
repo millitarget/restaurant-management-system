@@ -658,6 +658,12 @@
     let activeFilter = 'all';
     let allOrders = []; // Store all orders for filtering
     
+    // Load saved filter from localStorage if it exists
+    const savedFilter = localStorage.getItem('orderManagerActiveFilter');
+    if (savedFilter) {
+      activeFilter = savedFilter;
+    }
+    
     // Tab navigation
     orderTabs.forEach(tab => {
       tab.addEventListener('click', () => {
@@ -760,8 +766,16 @@
         const orders = await response.json();
         console.log('Orders received:', orders);
         allOrders = orders; // Store all orders for filtering
-        displayOrders(orders);
-        generateTimeFilters(orders); // Generate time filter buttons
+        
+        // Generate time filter buttons first (this will set up all the filters)
+        generateTimeFilters(orders);
+        
+        // If we have an active filter that's not 'all', we'll apply it in the generateTimeFilters function
+        // Otherwise, just display all orders
+        if (activeFilter === 'all') {
+          displayOrders(orders);
+        }
+        
       } catch (error) {
         console.error('Error loading orders:', error);
         document.getElementById('time-slots-container').innerHTML = `<div class="error">Error loading orders: ${error.message}</div>`;
@@ -823,12 +837,38 @@
       
       // Add event listener to All Orders button
       allFilter.addEventListener('click', () => filterOrders('all'));
+      
+      // Apply saved filter if it exists
+      if (activeFilter !== 'all') {
+        // Check if the filter button exists for the saved filter
+        const filterExists = Array.from(timeFiltersContainer.querySelectorAll('.filter-btn')).some(
+          btn => btn.dataset.filter === activeFilter
+        );
+        
+        if (filterExists) {
+          // Apply the saved filter
+          filterOrders(activeFilter);
+        } else {
+          // Reset to all if the saved filter doesn't exist anymore
+          activeFilter = 'all';
+          localStorage.setItem('orderManagerActiveFilter', 'all');
+          filterOrders('all');
+        }
+      } else {
+        // Make sure the All button is active
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.filter === 'all');
+        });
+      }
     }
     
     // Filter orders by time
     function filterOrders(filterValue) {
       // Update active filter
       activeFilter = filterValue;
+      
+      // Save filter to localStorage
+      localStorage.setItem('orderManagerActiveFilter', filterValue);
       
       // Update filter button states
       document.querySelectorAll('.filter-btn').forEach(btn => {
