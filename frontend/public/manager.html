@@ -198,6 +198,14 @@
       box-shadow: 0 2px 8px rgba(0,0,0,0.1);
     }
 
+    .orders-container {
+      margin-top: 20px;
+      background-color: white;
+      border-radius: 4px;
+      padding: 15px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
     .order-card {
       border-left: 3px solid #2196F3;
       background-color: #f9f9f9;
@@ -376,6 +384,10 @@
         <div id="time-slots-container" class="time-slots-wrapper">
           <!-- Time slots will be generated here -->
         </div>
+        
+        <div id="orders-container" class="orders-container">
+          <!-- Orders will be dynamically loaded here -->
+        </div>
       </div>
       
       <div class="tab-content" id="cashier-content">
@@ -493,19 +505,24 @@
     // Load orders
     async function loadAllOrders() {
       try {
+        console.log('Loading all orders...');
         document.getElementById('orders-container').innerHTML = '<div class="loading">Loading orders...</div>';
         
         // Use API_CONFIG to get the appropriate URL for the environment
-        const response = await fetch(API_CONFIG.getUrl('/orders'));
+        const apiUrl = API_CONFIG.getUrl('/orders');
+        console.log('Fetching orders from:', apiUrl);
+        
+        const response = await fetch(apiUrl);
         
         if (!response.ok) {
-          throw new Error('Failed to fetch orders');
+          throw new Error(`Failed to fetch orders: ${response.status} ${response.statusText}`);
         }
         
         const orders = await response.json();
+        console.log('Orders received:', orders);
         displayOrders(orders);
       } catch (error) {
-        console.error('Error:', error);
+        console.error('Error loading orders:', error);
         document.getElementById('orders-container').innerHTML = `<div class="error">Error loading orders: ${error.message}</div>`;
       }
     }
@@ -518,36 +535,41 @@
         return;
       }
       
-      console.log('Displaying orders:', orders);
+      console.log('Displaying orders:', orders.length, 'orders found');
       
-      // Reset containers
-      document.getElementById('orders-container').innerHTML = '';
-      
-      // Re-create containers
-      const ordersContainer = document.getElementById('orders-container');
-      
-      const timeSlotsSection = document.createElement('div');
-      timeSlotsSection.className = 'time-slots-section';
-      timeSlotsSection.innerHTML = '<h3>Scheduled Orders</h3>';
-      
-      const timeSlotsContainer = document.createElement('div');
-      timeSlotsContainer.className = 'time-slots-container';
-      timeSlotsSection.appendChild(timeSlotsContainer);
-      
-      const cashierSection = document.createElement('div');
-      cashierSection.className = 'cashier-section';
-      cashierSection.innerHTML = '<h3>Walk-in Orders</h3>';
-      
-      const cashierOrdersContainer = document.createElement('div');
-      cashierOrdersContainer.className = 'cashier-orders-container';
-      cashierSection.appendChild(cashierOrdersContainer);
-      
-      // Add sections to main container
-      ordersContainer.appendChild(timeSlotsSection);
-      ordersContainer.appendChild(cashierSection);
-      
-      // Organize and display orders
-      organizeOrders(orders, timeSlotsContainer, cashierOrdersContainer);
+      try {
+        // Reset containers
+        document.getElementById('orders-container').innerHTML = '';
+        
+        // Re-create containers
+        const ordersContainer = document.getElementById('orders-container');
+        
+        const timeSlotsSection = document.createElement('div');
+        timeSlotsSection.className = 'time-slots-section';
+        timeSlotsSection.innerHTML = '<h3>Scheduled Orders</h3>';
+        
+        const timeSlotsContainer = document.createElement('div');
+        timeSlotsContainer.className = 'time-slots-container';
+        timeSlotsSection.appendChild(timeSlotsContainer);
+        
+        const cashierSection = document.createElement('div');
+        cashierSection.className = 'cashier-section';
+        cashierSection.innerHTML = '<h3>Walk-in Orders</h3>';
+        
+        const cashierOrdersContainer = document.createElement('div');
+        cashierOrdersContainer.className = 'cashier-orders-container';
+        cashierSection.appendChild(cashierOrdersContainer);
+        
+        // Add sections to main container
+        ordersContainer.appendChild(timeSlotsSection);
+        ordersContainer.appendChild(cashierSection);
+        
+        // Organize and display orders
+        organizeOrders(orders, timeSlotsContainer, cashierOrdersContainer);
+      } catch (error) {
+        console.error('Error displaying orders:', error);
+        document.getElementById('orders-container').innerHTML = `<div class="error">Error displaying orders: ${error.message}</div>`;
+      }
     }
     
     // Organize orders into time slots and cashier orders
@@ -557,10 +579,13 @@
       cashierOrdersContainer.innerHTML = '';
       
       if (!orders || orders.length === 0) {
+        console.log('No orders found to organize');
         timeSlotsContainer.innerHTML = '<p>No orders found.</p>';
         cashierOrdersContainer.innerHTML = '<p>No cashier orders found.</p>';
         return;
       }
+      
+      console.log(`Organizing ${orders.length} orders`);
       
       // Group orders by time slots (10 min intervals)
       const timeSlots = {};
@@ -569,6 +594,7 @@
       orders.forEach(order => {
         // Handle cashier (walk-in) orders separately
         if (order.source === 'walk-in') {
+          console.log(`Adding walk-in order ${order.id} to cashier orders`);
           cashierOrders.push(order);
         }
         
@@ -585,12 +611,14 @@
             timeSlots[slotKey] = [];
           }
           
+          console.log(`Adding order ${order.id} to time slot ${slotKey}`);
           timeSlots[slotKey].push(order);
         }
       });
       
       // Render time slots
       const sortedSlotKeys = Object.keys(timeSlots).sort((a, b) => new Date(a) - new Date(b));
+      console.log(`Found ${sortedSlotKeys.length} time slots`);
       
       sortedSlotKeys.forEach(slotKey => {
         const slotOrders = timeSlots[slotKey];
@@ -616,6 +644,7 @@
       });
       
       // Render cashier orders
+      console.log(`Rendering ${cashierOrders.length} cashier orders`);
       cashierOrders.forEach(order => {
         const orderCard = createOrderCard(order);
         cashierOrdersContainer.appendChild(orderCard);
@@ -629,6 +658,8 @@
     
     // Create compact order card with expand/collapse
     function createOrderCard(order) {
+      console.log(`Creating order card for order ${order.id}`);
+      
       const orderCard = document.createElement('div');
       orderCard.className = 'order-card';
       orderCard.dataset.orderId = order.id;
@@ -638,8 +669,10 @@
       // Create item summary text
       let itemSummary = '';
       if (order.items && order.items.length > 0) {
+        console.log(`Order ${order.id} has ${order.items.length} items`);
         itemSummary = order.items.map(item => `${item.quantity}x ${item.item_name}`).join(', ');
       } else {
+        console.log(`Order ${order.id} has no items`);
         itemSummary = 'No items';
       }
       
@@ -800,12 +833,12 @@
       
       try {
         let response;
-        let url = 'http://localhost:3000/orders';
+        let url = API_CONFIG.getUrl('/orders');
         let method = 'POST';
         
         // Update existing order
         if (orderId) {
-          url = `http://localhost:3000/orders/${orderId}`;
+          url = API_CONFIG.getUrl(`/orders/${orderId}`);
           method = 'PUT';
         }
         

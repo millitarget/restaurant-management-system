@@ -68,7 +68,7 @@ const shouldShowItemAtStation = (item, order, currentTime) => {
   // If item is not "ready_to_start", check if it should be visible
   if (item.item_status !== 'ready_to_start') {
     // For kitchen and grill stations, always show items
-    if (item.station === 'kitchen' || item.station === 'grill') {
+    if (item.station === 'kitchen' || item.station === 'grill' || item.station === 'churrasco') {
       return true;
     }
     
@@ -360,22 +360,39 @@ router.get('/grill', async (req, res) => {
     
     for (const order of allOrders) {
       try {
-        const { data: grillItems, error: itemsError } = await req.supabaseAdmin
+        // Get both 'grill' and 'churrasco' items since they are the same station
+        // First try to get grill items
+        const { data: grillItems, error: grillItemsError } = await req.supabaseAdmin
           .from('items')
           .select('*')
           .eq('order_id', order.id)
           .eq('station', 'grill');
         
-        if (itemsError) {
-          console.error(`Error fetching grill items for order ${order.id}:`, itemsError);
+        if (grillItemsError) {
+          console.error(`Error fetching grill items for order ${order.id}:`, grillItemsError);
           continue;
         }
         
-        if (grillItems && grillItems.length > 0) {
-          console.log(`Order ${order.id} has ${grillItems.length} grill items`);
+        // Then try to get churrasco items
+        const { data: churrascoItems, error: churrascoItemsError } = await req.supabaseAdmin
+          .from('items')
+          .select('*')
+          .eq('order_id', order.id)
+          .eq('station', 'churrasco');
+        
+        if (churrascoItemsError) {
+          console.error(`Error fetching churrasco items for order ${order.id}:`, churrascoItemsError);
+          continue;
+        }
+        
+        // Combine both types of items
+        const combinedItems = [...(grillItems || []), ...(churrascoItems || [])];
+        
+        if (combinedItems.length > 0) {
+          console.log(`Order ${order.id} has ${combinedItems.length} grill/churrasco items`);
           
           // Add preparation status to each item
-          grillItems.forEach(item => {
+          combinedItems.forEach(item => {
             item.prep_status = determineItemPrepStatus(item, order, now);
             // Make sure item_status exists
             if (!item.item_status) {
@@ -384,7 +401,7 @@ router.get('/grill', async (req, res) => {
           });
           
           // Sort items by urgency (those that need to be prepared first)
-          grillItems.sort((a, b) => {
+          combinedItems.sort((a, b) => {
             if (a.prep_status.includes('NOW') && !b.prep_status.includes('NOW')) return -1;
             if (!a.prep_status.includes('NOW') && b.prep_status.includes('NOW')) return 1;
             return a.preparation_time_minutes - b.preparation_time_minutes;
@@ -392,8 +409,8 @@ router.get('/grill', async (req, res) => {
           
           ordersWithItems.push({
             ...order,
-            items: grillItems,
-            order_prep_status: determineOrderStatus(order, grillItems, now)
+            items: combinedItems,
+            order_prep_status: determineOrderStatus(order, combinedItems, now)
           });
         }
       } catch (orderError) {
@@ -451,22 +468,38 @@ router.get('/fries', async (req, res) => {
     
     for (const order of allOrders) {
       try {
-        const { data: friesItems, error: itemsError } = await req.supabaseAdmin
+        // Get fries items
+        const { data: friesItems, error: friesItemsError } = await req.supabaseAdmin
           .from('items')
           .select('*')
           .eq('order_id', order.id)
           .eq('station', 'fries');
         
-        if (itemsError) {
-          console.error(`Error fetching fries items for order ${order.id}:`, itemsError);
+        if (friesItemsError) {
+          console.error(`Error fetching fries items for order ${order.id}:`, friesItemsError);
           continue;
         }
         
-        if (friesItems && friesItems.length > 0) {
-          console.log(`Order ${order.id} has ${friesItems.length} fries items`);
+        // Also check for any alternative names for fries station
+        const { data: altFriesItems, error: altFriesItemsError } = await req.supabaseAdmin
+          .from('items')
+          .select('*')
+          .eq('order_id', order.id)
+          .eq('station', 'batatas'); // Portuguese name for fries
+        
+        if (altFriesItemsError) {
+          console.error(`Error fetching alternative fries items for order ${order.id}:`, altFriesItemsError);
+          continue;
+        }
+        
+        // Combine both types of items
+        const combinedItems = [...(friesItems || []), ...(altFriesItems || [])];
+        
+        if (combinedItems.length > 0) {
+          console.log(`Order ${order.id} has ${combinedItems.length} fries items`);
           
           // Add preparation status to each item
-          friesItems.forEach(item => {
+          combinedItems.forEach(item => {
             item.prep_status = determineItemPrepStatus(item, order, now);
             // Make sure item_status exists
             if (!item.item_status) {
@@ -475,7 +508,7 @@ router.get('/fries', async (req, res) => {
           });
           
           // Sort items by urgency
-          friesItems.sort((a, b) => {
+          combinedItems.sort((a, b) => {
             if (a.prep_status.includes('NOW') && !b.prep_status.includes('NOW')) return -1;
             if (!a.prep_status.includes('NOW') && b.prep_status.includes('NOW')) return 1;
             return a.preparation_time_minutes - b.preparation_time_minutes;
@@ -483,8 +516,8 @@ router.get('/fries', async (req, res) => {
           
           ordersWithItems.push({
             ...order,
-            items: friesItems,
-            order_prep_status: determineOrderStatus(order, friesItems, now)
+            items: combinedItems,
+            order_prep_status: determineOrderStatus(order, combinedItems, now)
           });
         }
       } catch (orderError) {
